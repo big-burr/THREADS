@@ -18,7 +18,7 @@ const els = {
   tagFields: document.getElementById('tagFields'),
   tagCategory: document.getElementById('tagCategory'),
   tagColor: document.getElementById('tagColor'),
-  tagStyle: document.getElementById('tagStyle'),
+  tagStyleGroup: document.getElementById('tagStyleGroup'),
   tagSeason: document.getElementById('tagSeason'),
   cancelAddItem: document.getElementById('cancelAddItem'),
   saveItemBtn: document.getElementById('saveItemBtn'),
@@ -60,6 +60,19 @@ els.cancelAddItem.addEventListener('click', () => {
   resetModal();
 });
 
+function getCheckedStyles() {
+  return Array.from(els.tagStyleGroup.querySelectorAll('input[type="checkbox"]:checked')).map(
+    (cb) => cb.value
+  );
+}
+
+function setCheckedStyles(styles) {
+  const set = new Set((styles || []).map((s) => s.toLowerCase()));
+  els.tagStyleGroup.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+    cb.checked = set.has(cb.value);
+  });
+}
+
 function resetModal() {
   pendingPhotoBlob = null;
   pendingMediaType = null;
@@ -70,7 +83,7 @@ function resetModal() {
   els.tagFields.classList.add('hidden');
   els.saveItemBtn.disabled = true;
   els.tagColor.value = '';
-  els.tagStyle.value = '';
+  setCheckedStyles([]);
   els.tagSeason.value = '';
 }
 
@@ -108,7 +121,7 @@ els.itemPhotoInput.addEventListener('change', async (e) => {
     }
 
     els.tagColor.value = tags.color || '';
-    els.tagStyle.value = tags.style || '';
+    setCheckedStyles(tags.styles || []);
     els.tagSeason.value = tags.season || '';
 
     els.tagStatus.classList.add('hidden');
@@ -140,7 +153,8 @@ els.addItemForm.addEventListener('submit', async (e) => {
   try {
     const category = els.tagCategory.value.trim();
     const color = els.tagColor.value.trim();
-    const style = els.tagStyle.value.trim();
+    const styles = getCheckedStyles();
+    const styleText = styles.join(', ');
     const season = els.tagSeason.value.trim();
 
     const ext = (pendingMediaType.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
@@ -154,7 +168,7 @@ els.addItemForm.addEventListener('submit', async (e) => {
       `### ${color} ${category.replace(/s$/, '')}`,
       `![[${imagePath}]]`,
       `- color: ${color}`,
-      `- style: ${style}`,
+      `- style: ${styleText}`,
       `- season: ${season}`,
       `- added: ${dateAdded}`,
     ].join('\n');
