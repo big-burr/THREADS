@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>THREADS</title>
 <link rel="stylesheet" href="css/style.css">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="THREADS">
+<meta name="theme-color" content="#2B2824">
 </head>
 <body>
 
@@ -69,7 +75,14 @@
         <input type="text" id="tagColor" class="picker-input">
 
         <label class="modal-label">style / formality</label>
-        <input type="text" id="tagStyle" class="picker-input">
+        <div id="tagStyleGroup" class="style-checkbox-group">
+          <label class="style-checkbox"><input type="checkbox" value="casual"> casual</label>
+          <label class="style-checkbox"><input type="checkbox" value="formal"> formal</label>
+          <label class="style-checkbox"><input type="checkbox" value="gym"> gym / athletic</label>
+          <label class="style-checkbox"><input type="checkbox" value="date"> date night</label>
+          <label class="style-checkbox"><input type="checkbox" value="outdoor"> outdoor / cold weather</label>
+          <label class="style-checkbox"><input type="checkbox" value="loungewear"> loungewear</label>
+        </div>
 
         <label class="modal-label">season</label>
         <input type="text" id="tagSeason" class="picker-input">
@@ -78,6 +91,44 @@
       <div class="modal-actions">
         <button type="button" id="cancelAddItem" class="btn-tag">cancel</button>
         <button type="submit" id="saveItemBtn" class="btn-tag btn-tag--accent" disabled>save to closet</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Item detail / edit modal -->
+  <dialog id="detailModal" class="tag-modal">
+    <form id="detailForm" class="tag-modal-form">
+      <h2 class="tag-modal-title">edit item</h2>
+
+      <img id="detailPhotoPreview" class="photo-preview">
+
+      <label class="modal-label">category</label>
+      <input type="text" id="detailCategory" class="picker-input" disabled>
+
+      <label class="modal-label">color</label>
+      <input type="text" id="detailColor" class="picker-input">
+
+      <label class="modal-label">style / formality</label>
+      <div id="detailStyleGroup" class="style-checkbox-group">
+        <label class="style-checkbox"><input type="checkbox" value="casual"> casual</label>
+        <label class="style-checkbox"><input type="checkbox" value="formal"> formal</label>
+        <label class="style-checkbox"><input type="checkbox" value="gym"> gym / athletic</label>
+        <label class="style-checkbox"><input type="checkbox" value="date"> date night</label>
+        <label class="style-checkbox"><input type="checkbox" value="outdoor"> outdoor / cold weather</label>
+        <label class="style-checkbox"><input type="checkbox" value="loungewear"> loungewear</label>
+      </div>
+
+      <label class="modal-label">season</label>
+      <input type="text" id="detailSeason" class="picker-input">
+
+      <p class="status-line" id="detailAddedDate"></p>
+
+      <div class="modal-actions modal-actions--split">
+        <button type="button" id="deleteItemBtn" class="btn-tag btn-tag--danger">delete</button>
+        <div class="modal-actions">
+          <button type="button" id="closeDetailBtn" class="btn-tag">close</button>
+          <button type="submit" id="saveDetailBtn" class="btn-tag btn-tag--accent">save changes</button>
+        </div>
       </div>
     </form>
   </dialog>

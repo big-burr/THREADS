@@ -1,12 +1,15 @@
 // THREADS service worker — bump CACHE_VERSION on every deploy
-const CACHE_VERSION = 'threads-v1';
+const CACHE_VERSION = 'threads-v2';
 const ASSETS = [
   './',
   './index.html',
+  './manifest.json',
   './css/style.css',
   './js/app.js',
   './js/vault.js',
   './js/claude-api.js',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {

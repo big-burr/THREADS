@@ -68,7 +68,7 @@ const ClaudeAPI = (() => {
       ? `Existing categories in this closet: ${knownCategories.join(', ')}. Reuse one of these if it fits, otherwise propose a new short category name (e.g. "Pants", "Tees", "Sweaters", "Shoes", "Jackets", "Shorts").`
       : `Propose a short category name (e.g. "Pants", "Tees", "Sweaters", "Shoes", "Jackets", "Shorts").`;
 
-    const systemPrompt = `You are a clothing-tagging assistant. Respond ONLY with valid JSON, no preamble, no markdown fences. The JSON object must have exactly these keys: "category" (string, singular capitalized like "Tees" or "Pants"), "color" (string, primary color(s)), "style" (string, short formality/style descriptor like "casual", "athletic", "business formal"), "season" (string, e.g. "all-season", "winter", "summer").`;
+    const systemPrompt = `You are a clothing-tagging assistant. Respond ONLY with valid JSON, no preamble, no markdown fences. The JSON object must have exactly these keys: "category" (string, singular capitalized like "Tees" or "Pants"), "color" (string, primary color(s)), "styles" (array of strings, choose all that reasonably apply from exactly this list: "casual", "formal", "gym", "date", "outdoor", "loungewear"), "season" (string, e.g. "all-season", "winter", "summer").`;
 
     const userText = `Tag this clothing item. ${categoryHint}`;
 

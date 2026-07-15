@@ -320,9 +320,67 @@ body {
   margin-top: 14px;
 }
 
+.style-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.style-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: lowercase;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.style-checkbox input {
+  margin: 0;
+}
+
+.style-checkbox:has(input:checked) {
+  border-color: var(--denim);
+  background: #eef0f5;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
+}
+
+.modal-actions--split {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-tag--danger {
+  background: #fff;
+  color: var(--rust);
+  border-color: var(--rust);
+}
+
+.btn-tag--danger::before {
+  border-color: var(--rust);
+  background: #fff;
+}
+
+.btn-tag--danger:hover {
+  background: var(--rust);
+  color: #fff;
+}
+
+.garment-card {
+  cursor: pointer;
+}
+
+.garment-card:active {
+  transform: scale(0.97);
 }
