@@ -93,3 +93,307 @@ const Vault = (() => {
           }
         })
         .build();
+      picker.setVisible(true);
+    });
+  }
+
+  async function getFolderName(folderId) {
+    try {
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}?fields=name`, {
+        headers: authHeaders(),
+      });
+      const data = await res.json();
+      return data.name || '';
+    } catch (err) {
+      return '';
+    }
+  }
+
+  async function connect() {
+    try {
+      await signIn();
+
+      // Reuse a previously-picked vault folder if we have one saved
+      const savedFolderId = localStorage.getItem(VAULT_FOLDER_ID_KEY);
+      if (savedFolderId) {
+        vaultFolderId = savedFolderId;
+      } else {
+        vaultFolderId = await pickVaultFolder();
+        localStorage.setItem(VAULT_FOLDER_ID_KEY, vaultFolderId);
+      }
+
+      // Guard against nesting: if the user picked the 08-Closet folder itself
+      // (instead of its parent vault folder), use it directly rather than
+      // creating another 08-Closet inside it.
+      const pickedName = await getFolderName(vaultFolderId);
+      if (pickedName === CLOSET_FOLDER_NAME) {
+        closetFolderId = vaultFolderId;
+      } else {
+        closetFolderId = await findOrCreateFolder(CLOSET_FOLDER_NAME, vaultFolderId);
+      }
+
+      imagesFolderId = await findOrCreateFolder(IMAGES_FOLDER_NAME, closetFolderId);
+      logFolderId = await findOrCreateFolder(LOG_FOLDER_NAME, closetFolderId);
+
+      return true;
+    } catch (err) {
+      console.error('Vault connect failed:', err);
+      return false;
+    }
+  }
+
+  async function reselectVaultFolder() {
+    localStorage.removeItem(VAULT_FOLDER_ID_KEY);
+    fileIdCache.clear();
+    return connect();
+  }
+
+  function isConnected() {
+    return !!accessToken && !!closetFolderId;
+  }
+
+  function authHeaders(extra = {}) {
+    return { Authorization: `Bearer ${accessToken}`, ...extra };
+  }
+
+  async function findOrCreateFolder(name, parentId) {
+    const q = encodeURIComponent(
+      `'${parentId}' in parents and name = '${name}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`
+    );
+    const searchRes = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`,
+      { headers: authHeaders() }
+    );
+    const searchData = await searchRes.json();
+    if (searchData.files && searchData.files.length > 0) {
+      return searchData.files[0].id;
+    }
+
+    const metadata = {
+      name,
+      mimeType: 'application/vnd.google-apps.folder',
+      parents: [parentId],
+    };
+    const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(metadata),
+    });
+    const createData = await createRes.json();
+    return createData.id;
+  }
+
+  async function findFileInFolder(name, parentId) {
+    const cacheKey = `${parentId}:${name}`;
+    if (fileIdCache.has(cacheKey)) return fileIdCache.get(cacheKey);
+
+    const q = encodeURIComponent(`'${parentId}' in parents and name = '${name}' and trashed = false`);
+    const res = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`,
+      { headers: authHeaders() }
+    );
+    const data = await res.json();
+    const id = data.files && data.files.length > 0 ? data.files[0].id : null;
+    if (id) fileIdCache.set(cacheKey, id);
+    return id;
+  }
+
+  async function listFilesInFolder(parentId, nameFilter) {
+    const filterClause = nameFilter ? ` and name contains '${nameFilter}'` : '';
+    const q = encodeURIComponent(`'${parentId}' in parents and trashed = false${filterClause}`);
+    const res = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)&pageSize=1000`,
+      { headers: authHeaders() }
+    );
+    const data = await res.json();
+    return data.files || [];
+  }
+
+  async function downloadFileText(fileId) {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+      headers: authHeaders(),
+    });
+    if (!res.ok) return null;
+    return await res.text();
+  }
+
+  async function uploadTextFile(name, parentId, content, existingFileId) {
+    const boundary = 'threads-boundary-' + Date.now();
+    const metadata = existingFileId ? {} : { name, parents: [parentId], mimeType: 'text/markdown' };
+    const body =
+      `--${boundary}\r\n` +
+      `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+      `${JSON.stringify(metadata)}\r\n` +
+      `--${boundary}\r\n` +
+      `Content-Type: text/markdown\r\n\r\n` +
+      `${content}\r\n` +
+      `--${boundary}--`;
+
+    const url = existingFileId
+      ? `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}?uploadType=multipart`
+      : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+
+    const res = await fetch(url, {
+      method: existingFileId ? 'PATCH' : 'POST',
+      headers: authHeaders({ 'Content-Type': `multipart/related; boundary=${boundary}` }),
+      body,
+    });
+    const data = await res.json();
+    fileIdCache.set(`${parentId}:${name}`, data.id);
+    return data.id;
+  }
+
+  async function uploadBlobFile(name, parentId, blob) {
+    const boundary = 'threads-boundary-' + Date.now();
+    const metadata = { name, parents: [parentId], mimeType: blob.type || 'image/jpeg' };
+    const arrayBuffer = await blob.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+
+    const preamble =
+      `--${boundary}\r\n` +
+      `Content-Type: application/json; charset=UTF-8\r\n\r\n` +
+      `${JSON.stringify(metadata)}\r\n` +
+      `--${boundary}\r\n` +
+      `Content-Type: ${blob.type || 'image/jpeg'}\r\n\r\n`;
+    const closing = `\r\n--${boundary}--`;
+
+    const bodyParts = [
+      new TextEncoder().encode(preamble),
+      bytes,
+      new TextEncoder().encode(closing),
+    ];
+    const bodyBlob = new Blob(bodyParts);
+
+    const res = await fetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
+      {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': `multipart/related; boundary=${boundary}` }),
+        body: bodyBlob,
+      }
+    );
+    const data = await res.json();
+    return data.id;
+  }
+
+  async function listCategoryFiles() {
+    const files = await listFilesInFolder(closetFolderId);
+    return files
+      .filter((f) => f.name.endsWith('.md'))
+      .map((f) => f.name.replace(/\.md$/, ''));
+  }
+
+  async function readCategoryFile(category) {
+    const fileId = await findFileInFolder(`${category}.md`, closetFolderId);
+    if (!fileId) return null;
+    return await downloadFileText(fileId);
+  }
+
+  async function writeCategoryFile(category, content) {
+    const existingId = await findFileInFolder(`${category}.md`, closetFolderId);
+    await uploadTextFile(`${category}.md`, closetFolderId, content, existingId);
+  }
+
+  async function appendItem(category, itemMarkdown) {
+    let existing = await readCategoryFile(category);
+    if (!existing) {
+      existing = `# ${category}\n\n`;
+    }
+    const updated = existing.trimEnd() + '\n\n' + itemMarkdown + '\n';
+    await writeCategoryFile(category, updated);
+  }
+
+  function splitCategoryContent(content) {
+    if (!content) return { header: '', items: [] };
+    const firstBlockIdx = content.search(/^### /m);
+    if (firstBlockIdx === -1) return { header: content, items: [] };
+    const header = content.slice(0, firstBlockIdx);
+    const rest = content.slice(firstBlockIdx);
+    const items = rest.split(/^### /m).filter(Boolean);
+    return { header, items };
+  }
+
+  async function updateItem(category, itemIndex, newItemMarkdown) {
+    const content = await readCategoryFile(category);
+    const { header, items } = splitCategoryContent(content);
+    if (itemIndex < 0 || itemIndex >= items.length) {
+      throw new Error('Item index out of range');
+    }
+    items[itemIndex] = newItemMarkdown.trim() + '\n';
+    const rebuilt = header.trimEnd() + '\n\n' + items.map((b) => '### ' + b.trim()).join('\n\n') + '\n';
+    await writeCategoryFile(category, rebuilt);
+  }
+
+  async function deleteItem(category, itemIndex) {
+    const content = await readCategoryFile(category);
+    const { header, items } = splitCategoryContent(content);
+    if (itemIndex < 0 || itemIndex >= items.length) {
+      throw new Error('Item index out of range');
+    }
+    items.splice(itemIndex, 1);
+    const rebuilt = items.length
+      ? header.trimEnd() + '\n\n' + items.map((b) => '### ' + b.trim()).join('\n\n') + '\n'
+      : header.trimEnd() + '\n';
+    await writeCategoryFile(category, rebuilt);
+  }
+
+  async function saveImage(filename, blob) {
+    await uploadBlobFile(filename, imagesFolderId, blob);
+    return `images/${filename}`;
+  }
+
+  async function loadImageURL(path) {
+    try {
+      const filename = path.replace(/^images\//, '');
+      const fileId = await findFileInFolder(filename, imagesFolderId);
+      if (!fileId) return null;
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+        headers: authHeaders(),
+      });
+      if (!res.ok) return null;
+      const blob = await res.blob();
+      return URL.createObjectURL(blob);
+    } catch (err) {
+      console.warn('Could not load image', path, err);
+      return null;
+    }
+  }
+
+  async function appendOutfitLog(dateStr, entryMarkdown) {
+    const filename = `${dateStr}.md`;
+    const existingId = await findFileInFolder(filename, logFolderId);
+    let existing = '';
+    if (existingId) {
+      existing = (await downloadFileText(existingId)) || '';
+    } else {
+      existing = `# Outfit Log — ${dateStr}\n\n`;
+    }
+    const updated = existing.trimEnd() + '\n\n' + entryMarkdown + '\n';
+    await uploadTextFile(filename, logFolderId, updated, existingId);
+  }
+
+  async function readAllCategories() {
+    const categories = await listCategoryFiles();
+    const result = {};
+    for (const cat of categories) {
+      result[cat] = await readCategoryFile(cat);
+    }
+    return result;
+  }
+
+  return {
+    connect,
+    reselectVaultFolder,
+    isConnected,
+    listCategoryFiles,
+    readCategoryFile,
+    writeCategoryFile,
+    appendItem,
+    updateItem,
+    deleteItem,
+    saveImage,
+    appendOutfitLog,
+    readAllCategories,
+    loadImageURL,
+  };
+})();
