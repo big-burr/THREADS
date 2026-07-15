@@ -18,12 +18,16 @@ const Vault = (() => {
   let tokenClient = null;
   let pickerLoaded = false;
 
-  let vaultFolderId = null;
+  let vaultFolderId = null;   // the BAKER vault root folder, chosen once via Picker
   let closetFolderId = null;
   let imagesFolderId = null;
   let logFolderId = null;
 
+  // Simple in-memory cache of file name -> file id within known folders,
+  // to avoid repeated search calls.
   const fileIdCache = new Map();
+
+  // ---------- Auth ----------
 
   function loadGis() {
     return new Promise((resolve, reject) => {
@@ -73,6 +77,9 @@ const Vault = (() => {
     });
   }
 
+  // Opens the Google Picker so the user selects their real BAKER vault folder.
+  // Because THREADS uses the narrow drive.file scope, this is the only way
+  // for it to gain access to a folder it didn't create itself.
   async function pickVaultFolder() {
     await loadPicker();
     return new Promise((resolve, reject) => {
@@ -101,6 +108,7 @@ const Vault = (() => {
     try {
       await signIn();
 
+      // Reuse a previously-picked vault folder if we have one saved
       const savedFolderId = localStorage.getItem(VAULT_FOLDER_ID_KEY);
       if (savedFolderId) {
         vaultFolderId = savedFolderId;
@@ -120,6 +128,7 @@ const Vault = (() => {
     }
   }
 
+  // Lets the user pick a different vault folder (forgets the saved one first)
   async function reselectVaultFolder() {
     localStorage.removeItem(VAULT_FOLDER_ID_KEY);
     fileIdCache.clear();
@@ -133,6 +142,8 @@ const Vault = (() => {
   function authHeaders(extra = {}) {
     return { Authorization: `Bearer ${accessToken}`, ...extra };
   }
+
+  // ---------- Low-level Drive helpers ----------
 
   async function findOrCreateFolder(name, parentId) {
     const q = encodeURIComponent(
@@ -254,6 +265,8 @@ const Vault = (() => {
     return data.id;
   }
 
+  // ---------- Category files ----------
+
   async function listCategoryFiles() {
     const files = await listFilesInFolder(closetFolderId);
     return files
@@ -281,11 +294,54 @@ const Vault = (() => {
     await writeCategoryFile(category, updated);
   }
 
+  // Splits a category file's body into { header, items[] } where each item
+  // is the raw "### ..." block text (without the leading "### ").
+  function splitCategoryContent(content) {
+    if (!content) return { header: '', items: [] };
+    const firstBlockIdx = content.search(/^### /m);
+    if (firstBlockIdx === -1) return { header: content, items: [] };
+    const header = content.slice(0, firstBlockIdx);
+    const rest = content.slice(firstBlockIdx);
+    const items = rest.split(/^### /m).filter(Boolean);
+    return { header, items };
+  }
+
+  // Replace the item at the given index (0-based, in file order) within a
+  // category file with new markdown content (without the "### " prefix).
+  async function updateItem(category, itemIndex, newItemMarkdown) {
+    const content = await readCategoryFile(category);
+    const { header, items } = splitCategoryContent(content);
+    if (itemIndex < 0 || itemIndex >= items.length) {
+      throw new Error('Item index out of range');
+    }
+    items[itemIndex] = newItemMarkdown.trim() + '\n';
+    const rebuilt = header.trimEnd() + '\n\n' + items.map((b) => '### ' + b.trim()).join('\n\n') + '\n';
+    await writeCategoryFile(category, rebuilt);
+  }
+
+  // Remove the item at the given index within a category file.
+  async function deleteItem(category, itemIndex) {
+    const content = await readCategoryFile(category);
+    const { header, items } = splitCategoryContent(content);
+    if (itemIndex < 0 || itemIndex >= items.length) {
+      throw new Error('Item index out of range');
+    }
+    items.splice(itemIndex, 1);
+    const rebuilt = items.length
+      ? header.trimEnd() + '\n\n' + items.map((b) => '### ' + b.trim()).join('\n\n') + '\n'
+      : header.trimEnd() + '\n';
+    await writeCategoryFile(category, rebuilt);
+  }
+
+  // ---------- Images ----------
+
   async function saveImage(filename, blob) {
     await uploadBlobFile(filename, imagesFolderId, blob);
     return `images/${filename}`;
   }
 
+  // Read an image back out of the vault and return a displayable object URL.
+  // path is expected in the form "images/filename.jpg"
   async function loadImageURL(path) {
     try {
       const filename = path.replace(/^images\//, '');
@@ -302,6 +358,8 @@ const Vault = (() => {
       return null;
     }
   }
+
+  // ---------- Outfit log ----------
 
   async function appendOutfitLog(dateStr, entryMarkdown) {
     const filename = `${dateStr}.md`;
@@ -333,6 +391,8 @@ const Vault = (() => {
     readCategoryFile,
     writeCategoryFile,
     appendItem,
+    updateItem,
+    deleteItem,
     saveImage,
     appendOutfitLog,
     readAllCategories,
