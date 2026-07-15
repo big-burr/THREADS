@@ -28,6 +28,7 @@ const els = {
   weatherInput: document.getElementById('weatherInput'),
   suggestBtn: document.getElementById('suggestBtn'),
   outfitResult: document.getElementById('outfitResult'),
+  weekGrid: document.getElementById('weekGrid'),
 
   detailModal: document.getElementById('detailModal'),
   detailForm: document.getElementById('detailForm'),
@@ -48,10 +49,13 @@ els.connectVaultBtn.addEventListener('click', async () => {
   els.vaultStatus.querySelector('.status-line').textContent = 'connecting…';
   const ok = await Vault.connect();
   if (ok) {
+    const folderId = Vault.getConnectedFolderId();
+    const folderUrl = `https://drive.google.com/drive/folders/${folderId}`;
     els.vaultStatus.querySelector('.status-line').innerHTML =
-      'vault connected — <strong>08-Closet</strong> loaded';
+      `vault connected — <a href="${folderUrl}" target="_blank" style="color:inherit">open 08-Closet in Drive</a>`;
     els.reselectVaultBtn.classList.remove('hidden');
     await renderCloset();
+    await renderWeekPlanner();
   } else {
     els.vaultStatus.querySelector('.status-line').textContent =
       'connection cancelled or failed — try again';
@@ -66,9 +70,12 @@ els.reselectVaultBtn.addEventListener('click', async () => {
   els.vaultStatus.querySelector('.status-line').textContent = 'reselecting…';
   const ok = await Vault.reselectVaultFolder();
   if (ok) {
+    const folderId = Vault.getConnectedFolderId();
+    const folderUrl = `https://drive.google.com/drive/folders/${folderId}`;
     els.vaultStatus.querySelector('.status-line').innerHTML =
-      'vault connected — <strong>08-Closet</strong> loaded';
+      `vault connected — <a href="${folderUrl}" target="_blank" style="color:inherit">open 08-Closet in Drive</a>`;
     await renderCloset();
+    await renderWeekPlanner();
   } else {
     els.vaultStatus.querySelector('.status-line').textContent =
       'connection cancelled or failed — try again';
@@ -139,6 +146,7 @@ els.itemPhotoInput.addEventListener('change', async (e) => {
     const tags = await ClaudeAPI.tagClothingItem(file, file.type, knownCategories);
     pendingTags = tags;
 
+    // Populate category dropdown: known categories + the suggested one
     const catSet = new Set(knownCategories);
     catSet.add(tags.category);
     els.tagCategory.innerHTML = '';
@@ -219,7 +227,7 @@ els.addItemForm.addEventListener('submit', async (e) => {
 
 // ---------- Render closet rails ----------
 
-let closetItemsByCategory = {};
+let closetItemsByCategory = {}; // cache for opening detail view without re-parsing
 
 async function renderCloset() {
   const categories = await Vault.readAllCategories();
@@ -246,6 +254,7 @@ async function renderCloset() {
     `;
     els.closetRails.appendChild(rail);
 
+    // Async-load each item's photo from the vault and swap it in
     const photoEls = rail.querySelectorAll('.garment-photo[data-image-path]');
     for (const imgEl of photoEls) {
       const path = imgEl.getAttribute('data-image-path');
@@ -254,6 +263,7 @@ async function renderCloset() {
       });
     }
 
+    // Tap a card to open detail/edit view
     rail.querySelectorAll('.garment-card').forEach((card) => {
       card.addEventListener('click', () => {
         const category = card.getAttribute('data-category');
@@ -275,6 +285,7 @@ function parseCategoryMarkdown(content) {
     const styleMatch = block.match(/- style: (.+)/);
     const seasonMatch = block.match(/- season: (.+)/);
     const addedMatch = block.match(/- added: (.+)/);
+    const wornMatch = block.match(/- worn: (\d+)/);
     return {
       index,
       raw: block,
@@ -284,6 +295,7 @@ function parseCategoryMarkdown(content) {
       style: styleMatch ? styleMatch[1].trim() : '',
       season: seasonMatch ? seasonMatch[1].trim() : '',
       added: addedMatch ? addedMatch[1].trim() : '',
+      worn: wornMatch ? parseInt(wornMatch[1], 10) : 0,
     };
   });
 }
@@ -292,9 +304,13 @@ function renderGarmentCard(item, category) {
   const imgTag = item.image
     ? `<img class="garment-photo" data-image-path="${item.image}" alt="${item.title}">`
     : '<div class="garment-photo"></div>';
+  const wornBadge = item.worn > 0
+    ? `<span class="garment-worn-badge">worn ${item.worn}×</span>`
+    : '';
   return `
     <div class="garment-card" data-category="${category}" data-index="${item.index}">
       ${imgTag}
+      ${wornBadge}
       <div class="garment-meta">
         <div class="garment-color">${item.color}</div>
         <div class="garment-style">${item.style}</div>
@@ -410,7 +426,7 @@ els.deleteItemBtn.addEventListener('click', async () => {
   }
 });
 
-// ---------- Outfit suggestion ----------
+let lastSuggestedOutfit = null;
 
 els.suggestBtn.addEventListener('click', async () => {
   if (!Vault.isConnected()) {
@@ -427,7 +443,9 @@ els.suggestBtn.addEventListener('click', async () => {
 
   try {
     const closetData = await Vault.readAllCategories();
-    const outfit = await ClaudeAPI.suggestOutfit(closetData, style, weather, []);
+    const recentLogs = await Vault.readRecentOutfitLogs(7);
+    const outfit = await ClaudeAPI.suggestOutfit(closetData, style, weather, recentLogs);
+    lastSuggestedOutfit = { outfit, style, weather };
 
     els.outfitResult.innerHTML = `
       <div class="rail-title">today's pick</div>
@@ -435,16 +453,11 @@ els.suggestBtn.addEventListener('click', async () => {
         ${outfit.items.map((i) => `<li><strong>${i.category}:</strong> ${i.description}</li>`).join('')}
       </ul>
       <p class="garment-style">${outfit.reasoning}</p>
+      <button type="button" id="wearOutfitBtn" class="btn-tag btn-tag--accent btn-tag--wide" style="margin-top:12px;">wear this outfit</button>
     `;
     els.outfitResult.classList.remove('hidden');
 
-    const dateStr = new Date().toISOString().slice(0, 10);
-    const logEntry = [
-      `## ${style} — ${weather}`,
-      ...outfit.items.map((i) => `- ${i.category}: ${i.description}`),
-      `- reasoning: ${outfit.reasoning}`,
-    ].join('\n');
-    await Vault.appendOutfitLog(dateStr, logEntry);
+    document.getElementById('wearOutfitBtn').addEventListener('click', confirmWearOutfit);
   } catch (err) {
     console.error('Suggestion failed:', err);
     alert('Could not generate an outfit: ' + err.message);
@@ -453,3 +466,121 @@ els.suggestBtn.addEventListener('click', async () => {
     els.suggestBtn.textContent = 'pick an outfit';
   }
 });
+
+// Logs the outfit to history and bumps wear counts on each item — only
+// called when the user confirms they're actually wearing the suggestion,
+// so wear counts reflect real use rather than every generated idea.
+async function confirmWearOutfit() {
+  if (!lastSuggestedOutfit) return;
+  const { outfit, style, weather } = lastSuggestedOutfit;
+
+  const btn = document.getElementById('wearOutfitBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'saving…';
+  }
+
+  try {
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const logEntry = [
+      `## ${style} — ${weather}`,
+      ...outfit.items.map((i) => `- ${i.category}: ${i.description}`),
+      `- reasoning: ${outfit.reasoning}`,
+    ].join('\n');
+    await Vault.appendOutfitLog(dateStr, logEntry);
+
+    for (const item of outfit.items) {
+      await Vault.incrementWorn(item.category, item.description);
+    }
+
+    if (btn) {
+      btn.textContent = 'logged ✓';
+    }
+    await renderCloset();
+  } catch (err) {
+    console.error('Failed to log outfit:', err);
+    alert('Could not save this outfit to your log: ' + err.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'wear this outfit';
+    }
+  }
+}
+
+// ---------- Week planner ----------
+
+function getWeekDates() {
+  const today = new Date();
+  const dayNr = (today.getDay() + 6) % 7; // Monday = 0
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - dayNr);
+
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+function formatDateStr(d) {
+  return d.toISOString().slice(0, 10);
+}
+
+async function renderWeekPlanner() {
+  if (!Vault.isConnected()) {
+    els.weekGrid.innerHTML = '<p class="status-line">connect your vault to plan your week</p>';
+    return;
+  }
+
+  const dates = getWeekDates();
+  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const plan = await Vault.readWeekPlan(formatDateStr(dates[0]));
+
+  els.weekGrid.innerHTML = dates
+    .map((d, i) => {
+      const dateStr = formatDateStr(d);
+      const summary = plan[dateStr];
+      const hasPlan = !!summary;
+      return `
+        <div class="week-day-card ${hasPlan ? 'has-plan' : ''}" data-date="${dateStr}">
+          <div>
+            <div class="week-day-label">${dayLabels[i]}</div>
+            <div class="week-day-date">${d.getDate()}</div>
+          </div>
+          <div class="week-day-summary">${hasPlan ? summary : 'tap to plan'}</div>
+        </div>
+      `;
+    })
+    .join('');
+
+  els.weekGrid.querySelectorAll('.week-day-card').forEach((card) => {
+    card.addEventListener('click', () => planDay(card.getAttribute('data-date')));
+  });
+}
+
+async function planDay(dateStr) {
+  const style = prompt('Style for this day? (casual, formal, gym, date, outdoor, loungewear)', 'casual');
+  if (!style) return;
+  const weather = prompt('Expected weather for this day?', 'not specified') || 'not specified';
+
+  try {
+    const closetData = await Vault.readAllCategories();
+    const recentLogs = await Vault.readRecentOutfitLogs(7);
+    const outfit = await ClaudeAPI.suggestOutfit(closetData, style, weather, recentLogs);
+
+    const summary = outfit.items.map((i) => i.description).join(', ');
+    await Vault.saveWeekPlanDay(dateStr, `${style}: ${summary}`);
+
+    for (const item of outfit.items) {
+      await Vault.incrementWorn(item.category, item.description);
+    }
+
+    await renderWeekPlanner();
+    await renderCloset();
+  } catch (err) {
+    console.error('Failed to plan day:', err);
+    alert('Could not plan this day: ' + err.message);
+  }
+}
