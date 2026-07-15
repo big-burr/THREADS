@@ -5,7 +5,7 @@
 */
 
 const ClaudeAPI = (() => {
-  const MODEL = 'claude-sonnet-4-6';
+  const MODEL = 'claude-haiku-4-5-20251001';
   const API_URL = 'https://api.anthropic.com/v1/messages';
 
   function getApiKey() {
@@ -27,6 +27,47 @@ const ClaudeAPI = (() => {
       reader.onload = () => resolve(reader.result.split(',')[1]);
       reader.onerror = reject;
       reader.readAsDataURL(blob);
+    });
+  }
+
+  // Resize an image blob down to a max dimension before sending to the API.
+  // Tagging only needs enough resolution to identify color/type/style — full
+  // camera resolution (often 3-4MB+) wastes a lot of tokens for no accuracy gain.
+  async function compressImage(blob, maxDimension = 800, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(blob);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        let { width, height } = img;
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height / width) * maxDimension);
+            width = maxDimension;
+          } else {
+            width = Math.round((width / height) * maxDimension);
+            height = maxDimension;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (resizedBlob) => {
+            if (resizedBlob) resolve(resizedBlob);
+            else reject(new Error('Image compression failed'));
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load image for compression'));
+      };
+      img.src = url;
     });
   }
 
@@ -62,7 +103,9 @@ const ClaudeAPI = (() => {
 
   // Tag a clothing photo — returns { category, color, style, season }
   async function tagClothingItem(imageBlob, mediaType, knownCategories) {
-    const base64 = await blobToBase64(imageBlob);
+    const compressed = await compressImage(imageBlob, 800, 0.8);
+    const base64 = await blobToBase64(compressed);
+    const compressedMediaType = 'image/jpeg';
 
     const categoryHint = knownCategories && knownCategories.length
       ? `Existing categories in this closet: ${knownCategories.join(', ')}. Reuse one of these if it fits, otherwise propose a new short category name (e.g. "Pants", "Tees", "Sweaters", "Shoes", "Jackets", "Shorts").`
@@ -76,7 +119,7 @@ const ClaudeAPI = (() => {
       {
         role: 'user',
         content: [
-          { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+          { type: 'image', source: { type: 'base64', media_type: compressedMediaType, data: base64 } },
           { type: 'text', text: userText },
         ],
       },
@@ -87,12 +130,35 @@ const ClaudeAPI = (() => {
     return JSON.parse(clean);
   }
 
+  // Extracts a compact one-line-per-item summary from a category's raw markdown,
+  // instead of sending the full file (with images/dates/formatting) to the API.
+  // This is the main cost lever for suggestOutfit as the closet grows.
+  function compactCategoryText(content) {
+    if (!content) return '(empty)';
+    const blocks = content.split(/^### /m).slice(1);
+    if (blocks.length === 0) return '(empty)';
+    return blocks
+      .map((block) => {
+        const lines = block.split('\n');
+        const title = lines[0].trim();
+        const colorMatch = block.match(/- color: (.+)/);
+        const styleMatch = block.match(/- style: (.+)/);
+        const seasonMatch = block.match(/- season: (.+)/);
+        const parts = [title];
+        if (colorMatch) parts.push(`color: ${colorMatch[1].trim()}`);
+        if (styleMatch) parts.push(`style: ${styleMatch[1].trim()}`);
+        if (seasonMatch) parts.push(`season: ${seasonMatch[1].trim()}`);
+        return '- ' + parts.join(', ');
+      })
+      .join('\n');
+  }
+
   // Suggest an outfit given closet contents (category markdown text), style, and weather
   async function suggestOutfit(closetData, style, weather, recentOutfits) {
-    const systemPrompt = `You are a personal stylist working only from the user's actual closet inventory (provided as markdown). Recommend one complete outfit using ONLY items that appear in the inventory. Respond ONLY with valid JSON, no preamble, no markdown fences. The JSON object must have keys: "items" (array of objects, each with "category" and "description" matching an item from the inventory), "reasoning" (short string, 1-2 sentences explaining the pick given style and weather).`;
+    const systemPrompt = `You are a personal stylist working only from the user's actual closet inventory (provided as a compact list). Recommend one complete outfit using ONLY items that appear in the inventory. Respond ONLY with valid JSON, no preamble, no markdown fences. The JSON object must have keys: "items" (array of objects, each with "category" and "description" matching an item from the inventory), "reasoning" (short string, 1-2 sentences explaining the pick given style and weather).`;
 
     const closetText = Object.entries(closetData)
-      .map(([cat, content]) => `## ${cat}\n${content || '(empty)'}`)
+      .map(([cat, content]) => `## ${cat}\n${compactCategoryText(content)}`)
       .join('\n\n');
 
     const recentText = recentOutfits && recentOutfits.length
