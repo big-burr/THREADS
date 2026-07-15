@@ -33,15 +33,8 @@
 
     <section class="outfit-picker">
       <div class="picker-row">
-       <label class="modal-label">style / formality</label>
-        <div id="tagStyleGroup" class="style-checkbox-group">
-          <label class="style-checkbox"><input type="checkbox" value="casual"> casual</label>
-          <label class="style-checkbox"><input type="checkbox" value="formal"> formal</label>
-          <label class="style-checkbox"><input type="checkbox" value="gym"> gym / athletic</label>
-          <label class="style-checkbox"><input type="checkbox" value="date"> date night</label>
-          <label class="style-checkbox"><input type="checkbox" value="outdoor"> outdoor / cold weather</label>
-          <label class="style-checkbox"><input type="checkbox" value="loungewear"> loungewear</label>
-        </div>
+        <label class="picker-label">style</label>
+        <select id="styleSelect" class="picker-input">
           <option value="casual">casual</option>
           <option value="formal">formal</option>
           <option value="gym">gym / athletic</option>
@@ -51,7 +44,7 @@
         </select>
       </div>
       <div class="picker-row">
-        < class="picker-">weather</label>
+        <label class="picker-label">weather</label>
         <input id="weatherInput" class="picker-input" type="text" placeholder="e.g. 45°F, rainy">
       </div>
       <button id="suggestBtn" class="btn-tag btn-tag--accent btn-tag--wide">pick an outfit</button>
