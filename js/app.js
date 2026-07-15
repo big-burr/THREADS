@@ -6,6 +6,7 @@ let pendingTags = null;
 
 const els = {
   connectVaultBtn: document.getElementById('connectVaultBtn'),
+  reselectVaultBtn: document.getElementById('reselectVaultBtn'),
   addItemBtn: document.getElementById('addItemBtn'),
   vaultStatus: document.getElementById('vaultStatus'),
   closetRails: document.getElementById('closetRails'),
@@ -46,6 +47,24 @@ const els = {
 els.connectVaultBtn.addEventListener('click', async () => {
   els.vaultStatus.querySelector('.status-line').textContent = 'connecting…';
   const ok = await Vault.connect();
+  if (ok) {
+    els.vaultStatus.querySelector('.status-line').innerHTML =
+      'vault connected — <strong>08-Closet</strong> loaded';
+    els.reselectVaultBtn.classList.remove('hidden');
+    await renderCloset();
+  } else {
+    els.vaultStatus.querySelector('.status-line').textContent =
+      'connection cancelled or failed — try again';
+  }
+});
+
+els.reselectVaultBtn.addEventListener('click', async () => {
+  const confirmed = confirm(
+    'This lets you pick a different folder to use as your closet. Pick the folder that already contains "08-Closet", or your BAKER vault root — not the 08-Closet folder itself.'
+  );
+  if (!confirmed) return;
+  els.vaultStatus.querySelector('.status-line').textContent = 'reselecting…';
+  const ok = await Vault.reselectVaultFolder();
   if (ok) {
     els.vaultStatus.querySelector('.status-line').innerHTML =
       'vault connected — <strong>08-Closet</strong> loaded';
@@ -120,7 +139,6 @@ els.itemPhotoInput.addEventListener('change', async (e) => {
     const tags = await ClaudeAPI.tagClothingItem(file, file.type, knownCategories);
     pendingTags = tags;
 
-    // Populate category dropdown: known categories + the suggested one
     const catSet = new Set(knownCategories);
     catSet.add(tags.category);
     els.tagCategory.innerHTML = '';
@@ -201,7 +219,7 @@ els.addItemForm.addEventListener('submit', async (e) => {
 
 // ---------- Render closet rails ----------
 
-let closetItemsByCategory = {}; // cache for opening detail view without re-parsing
+let closetItemsByCategory = {};
 
 async function renderCloset() {
   const categories = await Vault.readAllCategories();
@@ -228,7 +246,6 @@ async function renderCloset() {
     `;
     els.closetRails.appendChild(rail);
 
-    // Async-load each item's photo from the vault and swap it in
     const photoEls = rail.querySelectorAll('.garment-photo[data-image-path]');
     for (const imgEl of photoEls) {
       const path = imgEl.getAttribute('data-image-path');
@@ -237,7 +254,6 @@ async function renderCloset() {
       });
     }
 
-    // Tap a card to open detail/edit view
     rail.querySelectorAll('.garment-card').forEach((card) => {
       card.addEventListener('click', () => {
         const category = card.getAttribute('data-category');
@@ -393,6 +409,8 @@ els.deleteItemBtn.addEventListener('click', async () => {
     els.deleteItemBtn.textContent = 'delete';
   }
 });
+
+// ---------- Outfit suggestion ----------
 
 els.suggestBtn.addEventListener('click', async () => {
   if (!Vault.isConnected()) {
