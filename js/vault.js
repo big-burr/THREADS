@@ -18,12 +18,16 @@ const Vault = (() => {
   let tokenClient = null;
   let pickerLoaded = false;
 
-  let vaultFolderId = null;
+  let vaultFolderId = null;   // the BAKER vault root folder, chosen once via Picker
   let closetFolderId = null;
   let imagesFolderId = null;
   let logFolderId = null;
 
+  // Simple in-memory cache of file name -> file id within known folders,
+  // to avoid repeated search calls.
   const fileIdCache = new Map();
+
+  // ---------- Auth ----------
 
   function loadGis() {
     return new Promise((resolve, reject) => {
@@ -73,6 +77,9 @@ const Vault = (() => {
     });
   }
 
+  // Opens the Google Picker so the user selects their real BAKER vault folder.
+  // Because THREADS uses the narrow drive.file scope, this is the only way
+  // for it to gain access to a folder it didn't create itself.
   async function pickVaultFolder() {
     await loadPicker();
     return new Promise((resolve, reject) => {
@@ -113,6 +120,7 @@ const Vault = (() => {
     try {
       await signIn();
 
+      // Reuse a previously-picked vault folder if we have one saved
       const savedFolderId = localStorage.getItem(VAULT_FOLDER_ID_KEY);
       if (savedFolderId) {
         vaultFolderId = savedFolderId;
@@ -121,6 +129,9 @@ const Vault = (() => {
         localStorage.setItem(VAULT_FOLDER_ID_KEY, vaultFolderId);
       }
 
+      // Guard against nesting: if the user picked the 08-Closet folder itself
+      // (instead of its parent vault folder), use it directly rather than
+      // creating another 08-Closet inside it.
       const pickedName = await getFolderName(vaultFolderId);
       if (pickedName === CLOSET_FOLDER_NAME) {
         closetFolderId = vaultFolderId;
@@ -138,6 +149,7 @@ const Vault = (() => {
     }
   }
 
+  // Lets the user pick a different vault folder (forgets the saved one first)
   async function reselectVaultFolder() {
     localStorage.removeItem(VAULT_FOLDER_ID_KEY);
     fileIdCache.clear();
@@ -148,9 +160,15 @@ const Vault = (() => {
     return !!accessToken && !!closetFolderId;
   }
 
+  function getConnectedFolderId() {
+    return closetFolderId;
+  }
+
   function authHeaders(extra = {}) {
     return { Authorization: `Bearer ${accessToken}`, ...extra };
   }
+
+  // ---------- Low-level Drive helpers ----------
 
   async function findOrCreateFolder(name, parentId) {
     const q = encodeURIComponent(
@@ -310,6 +328,8 @@ const Vault = (() => {
     return data.id;
   }
 
+  // ---------- Category files ----------
+
   async function listCategoryFiles() {
     const files = await listFilesInFolder(closetFolderId);
     return files
@@ -337,6 +357,8 @@ const Vault = (() => {
     await writeCategoryFile(category, updated);
   }
 
+  // Splits a category file's body into { header, items[] } where each item
+  // is the raw "### ..." block text (without the leading "### ").
   function splitCategoryContent(content) {
     if (!content) return { header: '', items: [] };
     const firstBlockIdx = content.search(/^### /m);
@@ -347,6 +369,8 @@ const Vault = (() => {
     return { header, items };
   }
 
+  // Replace the item at the given index (0-based, in file order) within a
+  // category file with new markdown content (without the "### " prefix).
   async function updateItem(category, itemIndex, newItemMarkdown) {
     const content = await readCategoryFile(category);
     const { header, items } = splitCategoryContent(content);
@@ -358,6 +382,7 @@ const Vault = (() => {
     await writeCategoryFile(category, rebuilt);
   }
 
+  // Remove the item at the given index within a category file.
   async function deleteItem(category, itemIndex) {
     const content = await readCategoryFile(category);
     const { header, items } = splitCategoryContent(content);
@@ -371,11 +396,46 @@ const Vault = (() => {
     await writeCategoryFile(category, rebuilt);
   }
 
+  // Increments the "worn" count on an item, matched by its title line
+  // (e.g. "Black Tee") within a category file. Adds a "- worn: 1" line if
+  // the item doesn't have one yet. Silently no-ops if the item can't be found,
+  // since outfit descriptions from the AI are free text and may not match exactly.
+  async function incrementWorn(category, itemTitle) {
+    const content = await readCategoryFile(category);
+    if (!content) return false;
+    const { header, items } = splitCategoryContent(content);
+
+    const idx = items.findIndex((block) => {
+      const firstLine = block.split('\n')[0].trim().toLowerCase();
+      return firstLine === itemTitle.trim().toLowerCase();
+    });
+    if (idx === -1) return false;
+
+    const block = items[idx];
+    const wornMatch = block.match(/- worn: (\d+)/);
+    let updatedBlock;
+    if (wornMatch) {
+      const newCount = parseInt(wornMatch[1], 10) + 1;
+      updatedBlock = block.replace(/- worn: \d+/, `- worn: ${newCount}`);
+    } else {
+      updatedBlock = block.trim() + `\n- worn: 1`;
+    }
+    items[idx] = updatedBlock.trim() + '\n';
+
+    const rebuilt = header.trimEnd() + '\n\n' + items.map((b) => '### ' + b.trim()).join('\n\n') + '\n';
+    await writeCategoryFile(category, rebuilt);
+    return true;
+  }
+
+  // ---------- Images ----------
+
   async function saveImage(filename, blob) {
     await uploadBlobFile(filename, imagesFolderId, blob);
     return `images/${filename}`;
   }
 
+  // Read an image back out of the vault and return a displayable object URL.
+  // path is expected in the form "images/filename.jpg"
   async function loadImageURL(path) {
     try {
       const filename = path.replace(/^images\//, '');
@@ -393,6 +453,8 @@ const Vault = (() => {
     }
   }
 
+  // ---------- Outfit log ----------
+
   async function appendOutfitLog(dateStr, entryMarkdown) {
     const filename = `${dateStr}.md`;
     const existingId = await findFileInFolder(filename, logFolderId);
@@ -406,6 +468,23 @@ const Vault = (() => {
     await uploadTextFile(filename, logFolderId, updated, existingId);
   }
 
+  // Returns the N most recent outfit log entries (by filename date, descending),
+  // as an array of raw markdown strings — used to avoid repeating outfits.
+  async function readRecentOutfitLogs(limit = 7) {
+    const files = await listFilesInFolder(logFolderId);
+    const mdFiles = files
+      .filter((f) => f.name.endsWith('.md'))
+      .sort((a, b) => (a.name < b.name ? 1 : -1)) // filenames are YYYY-MM-DD.md, so string sort works
+      .slice(0, limit);
+
+    const entries = [];
+    for (const f of mdFiles) {
+      const text = await downloadFileText(f.id);
+      if (text) entries.push(text);
+    }
+    return entries;
+  }
+
   async function readAllCategories() {
     const categories = await listCategoryFiles();
     const result = {};
@@ -415,19 +494,71 @@ const Vault = (() => {
     return result;
   }
 
+  // ---------- Weekly plan ----------
+  // Stored as one file per ISO week in outfit-log/, e.g. "week-2026-W29.md",
+  // with one line per day: "YYYY-MM-DD: style — weather | item, item, item"
+
+  function getWeekFilename(dateInWeek) {
+    const d = new Date(dateInWeek);
+    const target = new Date(d.valueOf());
+    const dayNr = (d.getDay() + 6) % 7; // Monday = 0
+    target.setDate(target.getDate() - dayNr + 3);
+    const firstThursday = new Date(target.getFullYear(), 0, 4);
+    const weekNumber =
+      1 +
+      Math.round(
+        ((target - firstThursday) / 86400000 - 3 + ((firstThursday.getDay() + 6) % 7)) / 7
+      );
+    return `week-${target.getFullYear()}-W${String(weekNumber).padStart(2, '0')}.md`;
+  }
+
+  async function readWeekPlan(dateInWeek) {
+    const filename = getWeekFilename(dateInWeek);
+    const fileId = await findFileInFolder(filename, logFolderId);
+    if (!fileId) return {};
+    const text = await downloadFileText(fileId);
+    if (!text) return {};
+
+    const plan = {};
+    const lines = text.split('\n').filter((l) => /^\d{4}-\d{2}-\d{2}:/.test(l));
+    for (const line of lines) {
+      const [datePart, ...rest] = line.split(':');
+      plan[datePart.trim()] = rest.join(':').trim();
+    }
+    return plan;
+  }
+
+  async function saveWeekPlanDay(dateStr, summary) {
+    const filename = getWeekFilename(dateStr);
+    const existingId = await findFileInFolder(filename, logFolderId);
+    let existing = existingId ? (await downloadFileText(existingId)) || '' : `# Week Plan\n\n`;
+
+    const lines = existing.split('\n');
+    const otherLines = lines.filter((l) => !l.startsWith(`${dateStr}:`));
+    const newLine = `${dateStr}: ${summary}`;
+    const updated = [...otherLines, newLine].join('\n').trimEnd() + '\n';
+
+    await uploadTextFile(filename, logFolderId, updated, existingId);
+  }
+
   return {
     connect,
     reselectVaultFolder,
     isConnected,
+    getConnectedFolderId,
     listCategoryFiles,
     readCategoryFile,
     writeCategoryFile,
     appendItem,
     updateItem,
     deleteItem,
+    incrementWorn,
     saveImage,
     appendOutfitLog,
+    readRecentOutfitLogs,
     readAllCategories,
+    readWeekPlan,
+    saveWeekPlanDay,
     loadImageURL,
   };
 })();
