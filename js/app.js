@@ -30,6 +30,14 @@ const els = {
   outfitResult: document.getElementById('outfitResult'),
   weekGrid: document.getElementById('weekGrid'),
 
+  dayPlanModal: document.getElementById('dayPlanModal'),
+  dayPlanForm: document.getElementById('dayPlanForm'),
+  dayPlanTitle: document.getElementById('dayPlanTitle'),
+  dayPlanStyle: document.getElementById('dayPlanStyle'),
+  dayPlanWeather: document.getElementById('dayPlanWeather'),
+  cancelDayPlan: document.getElementById('cancelDayPlan'),
+  submitDayPlan: document.getElementById('submitDayPlan'),
+
   detailModal: document.getElementById('detailModal'),
   detailForm: document.getElementById('detailForm'),
   detailPhotoPreview: document.getElementById('detailPhotoPreview'),
@@ -428,6 +436,37 @@ els.deleteItemBtn.addEventListener('click', async () => {
 
 let lastSuggestedOutfit = null;
 
+// Finds the closest matching real closet item for an outfit suggestion's
+// category + description text, so we can show its actual photo.
+function findMatchingClosetItem(category, description) {
+  const items = closetItemsByCategory[category];
+  if (!items || items.length === 0) return null;
+
+  const descLower = description.toLowerCase();
+  // Prefer an item whose title or color appears in the description text
+  let match = items.find(
+    (item) =>
+      (item.title && descLower.includes(item.title.toLowerCase())) ||
+      (item.color && descLower.includes(item.color.toLowerCase()))
+  );
+  if (!match) match = items[0]; // fallback: just show something from that category
+  return match;
+}
+
+async function renderOutfitPhotos(outfit) {
+  const photoHtml = outfit.items
+    .map((i) => {
+      const match = findMatchingClosetItem(i.category, i.description);
+      if (!match || !match.image) return '';
+      return `<div class="outfit-photo-item" data-image-path="${match.image}">
+        <img class="outfit-photo" data-image-path="${match.image}" alt="${i.description}">
+        <div class="outfit-photo-label">${i.category}</div>
+      </div>`;
+    })
+    .join('');
+  return photoHtml;
+}
+
 els.suggestBtn.addEventListener('click', async () => {
   if (!Vault.isConnected()) {
     alert('Connect your vault first.');
@@ -447,17 +486,40 @@ els.suggestBtn.addEventListener('click', async () => {
     const outfit = await ClaudeAPI.suggestOutfit(closetData, style, weather, recentLogs);
     lastSuggestedOutfit = { outfit, style, weather };
 
+    const photoHtml = await renderOutfitPhotos(outfit);
+
     els.outfitResult.innerHTML = `
       <div class="rail-title">today's pick</div>
+      ${photoHtml ? `<div class="outfit-photo-row">${photoHtml}</div>` : ''}
       <ul>
-        ${outfit.items.map((i) => `<li><strong>${i.category}:</strong> ${i.description}</li>`).join('')}
       </ul>
-      <p class="garment-style">${outfit.reasoning}</p>
-      <button type="button" id="wearOutfitBtn" class="btn-tag btn-tag--accent btn-tag--wide" style="margin-top:12px;">wear this outfit</button>
     `;
+
+    const listEl = els.outfitResult.querySelector('ul');
+    listEl.innerHTML = outfit.items.map((i) => `<li><strong>${i.category}:</strong> ${i.description}</li>`).join('');
+    const reasoningP = document.createElement('p');
+    reasoningP.className = 'garment-style';
+    reasoningP.textContent = outfit.reasoning;
+    els.outfitResult.appendChild(reasoningP);
+
+    const wearBtn = document.createElement('button');
+    wearBtn.type = 'button';
+    wearBtn.id = 'wearOutfitBtn';
+    wearBtn.className = 'btn-tag btn-tag--accent btn-tag--wide';
+    wearBtn.style.marginTop = '12px';
+    wearBtn.textContent = 'wear this outfit';
+    wearBtn.addEventListener('click', confirmWearOutfit);
+    els.outfitResult.appendChild(wearBtn);
+
     els.outfitResult.classList.remove('hidden');
 
-    document.getElementById('wearOutfitBtn').addEventListener('click', confirmWearOutfit);
+    // Load real photos into the outfit result async
+    els.outfitResult.querySelectorAll('.outfit-photo[data-image-path]').forEach((imgEl) => {
+      const path = imgEl.getAttribute('data-image-path');
+      Vault.loadImageURL(path).then((url) => {
+        if (url) imgEl.src = url;
+      });
+    });
   } catch (err) {
     console.error('Suggestion failed:', err);
     alert('Could not generate an outfit: ' + err.message);
@@ -560,10 +622,30 @@ async function renderWeekPlanner() {
   });
 }
 
-async function planDay(dateStr) {
-  const style = prompt('Style for this day? (casual, formal, gym, date, outdoor, loungewear)', 'casual');
-  if (!style) return;
-  const weather = prompt('Expected weather for this day?', 'not specified') || 'not specified';
+let dayPlanCurrentDate = null;
+
+function planDay(dateStr) {
+  dayPlanCurrentDate = dateStr;
+  els.dayPlanTitle.textContent = `plan ${dateStr}`;
+  els.dayPlanStyle.value = 'casual';
+  els.dayPlanWeather.value = '';
+  els.dayPlanModal.showModal();
+}
+
+els.cancelDayPlan.addEventListener('click', () => {
+  els.dayPlanModal.close();
+  dayPlanCurrentDate = null;
+});
+
+els.dayPlanForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!dayPlanCurrentDate) return;
+
+  const style = els.dayPlanStyle.value;
+  const weather = els.dayPlanWeather.value.trim() || 'not specified';
+
+  els.submitDayPlan.disabled = true;
+  els.submitDayPlan.textContent = 'generating…';
 
   try {
     const closetData = await Vault.readAllCategories();
@@ -571,16 +653,21 @@ async function planDay(dateStr) {
     const outfit = await ClaudeAPI.suggestOutfit(closetData, style, weather, recentLogs);
 
     const summary = outfit.items.map((i) => i.description).join(', ');
-    await Vault.saveWeekPlanDay(dateStr, `${style}: ${summary}`);
+    await Vault.saveWeekPlanDay(dayPlanCurrentDate, `${style}: ${summary}`);
 
     for (const item of outfit.items) {
       await Vault.incrementWorn(item.category, item.description);
     }
 
+    els.dayPlanModal.close();
+    dayPlanCurrentDate = null;
     await renderWeekPlanner();
     await renderCloset();
   } catch (err) {
     console.error('Failed to plan day:', err);
     alert('Could not plan this day: ' + err.message);
+  } finally {
+    els.submitDayPlan.disabled = false;
+    els.submitDayPlan.textContent = 'generate';
   }
-}
+});
