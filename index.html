@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THREADS</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="wordmark">
+      <span class="wordmark-main">THREADS</span>
+      <span class="wordmark-sub">garment index · outfit picks</span>
+    </div>
+    <div class="header-actions">
+      <button id="connectVaultBtn" class="btn-tag">connect vault</button>
+      <button id="addItemBtn" class="btn-tag btn-tag--accent">+ add item</button>
+    </div>
+  </header>
+
+  <main id="app">
+
+    <section class="rail-status" id="vaultStatus">
+      <p class="status-line">vault not connected — click <strong>connect vault</strong> to load your closet</p>
+    </section>
+
+    <section class="outfit-picker">
+      <div class="picker-row">
+        <label class="picker-label">style</label>
+        <select id="styleSelect" class="picker-input">
+          <option value="casual">casual</option>
+          <option value="formal">formal</option>
+          <option value="gym">gym / athletic</option>
+          <option value="date">date night</option>
+          <option value="outdoor">outdoor / cold weather</option>
+          <option value="loungewear">loungewear</option>
+        </select>
+      </div>
+      <div class="picker-row">
+        <label class="picker-label">weather</label>
+        <input id="weatherInput" class="picker-input" type="text" placeholder="e.g. 45°F, rainy">
+      </div>
+      <button id="suggestBtn" class="btn-tag btn-tag--accent btn-tag--wide">pick an outfit</button>
+    </section>
+
+    <section id="outfitResult" class="outfit-result hidden"></section>
+
+    <div id="closetRails"></div>
+
+  </main>
+
+  <!-- Add item modal -->
+  <dialog id="addItemModal" class="tag-modal">
+    <form id="addItemForm" class="tag-modal-form">
+      <h2 class="tag-modal-title">add item</h2>
+
+      <label class="modal-label">photo</label>
+      <input type="file" id="itemPhotoInput" accept="image/*" capture="environment" required>
+      <img id="itemPhotoPreview" class="photo-preview hidden">
+
+      <div id="tagStatus" class="tag-status hidden">tagging with AI…</div>
+
+      <div id="tagFields" class="tag-fields hidden">
+        <label class="modal-label">category</label>
+        <select id="tagCategory" class="picker-input"></select>
+
+        <label class="modal-label">color</label>
+        <input type="text" id="tagColor" class="picker-input">
+
+        <label class="modal-label">style / formality</label>
+        <input type="text" id="tagStyle" class="picker-input">
+
+        <label class="modal-label">season</label>
+        <input type="text" id="tagSeason" class="picker-input">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="cancelAddItem" class="btn-tag">cancel</button>
+        <button type="submit" id="saveItemBtn" class="btn-tag btn-tag--accent" disabled>save to closet</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/vault.js"></script>
+  <script src="js/claude-api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
