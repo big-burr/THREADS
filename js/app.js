@@ -27,6 +27,18 @@ const els = {
   weatherInput: document.getElementById('weatherInput'),
   suggestBtn: document.getElementById('suggestBtn'),
   outfitResult: document.getElementById('outfitResult'),
+
+  detailModal: document.getElementById('detailModal'),
+  detailForm: document.getElementById('detailForm'),
+  detailPhotoPreview: document.getElementById('detailPhotoPreview'),
+  detailCategory: document.getElementById('detailCategory'),
+  detailColor: document.getElementById('detailColor'),
+  detailStyleGroup: document.getElementById('detailStyleGroup'),
+  detailSeason: document.getElementById('detailSeason'),
+  detailAddedDate: document.getElementById('detailAddedDate'),
+  deleteItemBtn: document.getElementById('deleteItemBtn'),
+  closeDetailBtn: document.getElementById('closeDetailBtn'),
+  saveDetailBtn: document.getElementById('saveDetailBtn'),
 };
 
 // ---------- Vault connection ----------
@@ -189,9 +201,12 @@ els.addItemForm.addEventListener('submit', async (e) => {
 
 // ---------- Render closet rails ----------
 
+let closetItemsByCategory = {}; // cache for opening detail view without re-parsing
+
 async function renderCloset() {
   const categories = await Vault.readAllCategories();
   els.closetRails.innerHTML = '';
+  closetItemsByCategory = {};
 
   const catNames = Object.keys(categories);
   if (catNames.length === 0) {
@@ -201,12 +216,14 @@ async function renderCloset() {
 
   for (const cat of catNames) {
     const items = parseCategoryMarkdown(categories[cat]);
+    closetItemsByCategory[cat] = items;
+
     const rail = document.createElement('section');
     rail.className = 'category-rail';
     rail.innerHTML = `
       <div class="rail-title">${cat} <span class="rail-count">${items.length} item${items.length === 1 ? '' : 's'}</span></div>
       <div class="rail-track">
-        ${items.map(renderGarmentCard).join('')}
+        ${items.map((item) => renderGarmentCard(item, cat)).join('')}
       </div>
     `;
     els.closetRails.appendChild(rail);
@@ -219,33 +236,48 @@ async function renderCloset() {
         if (url) imgEl.src = url;
       });
     }
+
+    // Tap a card to open detail/edit view
+    rail.querySelectorAll('.garment-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        const category = card.getAttribute('data-category');
+        const index = parseInt(card.getAttribute('data-index'), 10);
+        openDetailModal(category, index);
+      });
+    });
   }
 }
 
 function parseCategoryMarkdown(content) {
   if (!content) return [];
   const blocks = content.split(/^### /m).slice(1);
-  return blocks.map((block) => {
+  return blocks.map((block, index) => {
     const lines = block.split('\n');
     const title = lines[0].trim();
     const imgMatch = block.match(/!\[\[(.+?)\]\]/);
     const colorMatch = block.match(/- color: (.+)/);
     const styleMatch = block.match(/- style: (.+)/);
+    const seasonMatch = block.match(/- season: (.+)/);
+    const addedMatch = block.match(/- added: (.+)/);
     return {
+      index,
+      raw: block,
       title,
       image: imgMatch ? imgMatch[1] : null,
       color: colorMatch ? colorMatch[1].trim() : '',
       style: styleMatch ? styleMatch[1].trim() : '',
+      season: seasonMatch ? seasonMatch[1].trim() : '',
+      added: addedMatch ? addedMatch[1].trim() : '',
     };
   });
 }
 
-function renderGarmentCard(item) {
+function renderGarmentCard(item, category) {
   const imgTag = item.image
     ? `<img class="garment-photo" data-image-path="${item.image}" alt="${item.title}">`
     : '<div class="garment-photo"></div>';
   return `
-    <div class="garment-card">
+    <div class="garment-card" data-category="${category}" data-index="${item.index}">
       ${imgTag}
       <div class="garment-meta">
         <div class="garment-color">${item.color}</div>
@@ -255,7 +287,112 @@ function renderGarmentCard(item) {
   `;
 }
 
-// ---------- Outfit suggestion ----------
+// ---------- Detail / edit modal ----------
+
+let detailCurrentCategory = null;
+let detailCurrentIndex = null;
+
+function getDetailCheckedStyles() {
+  return Array.from(els.detailStyleGroup.querySelectorAll('input[type="checkbox"]:checked')).map(
+    (cb) => cb.value
+  );
+}
+
+function setDetailCheckedStyles(styles) {
+  const set = new Set((styles || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean));
+  els.detailStyleGroup.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+    cb.checked = set.has(cb.value);
+  });
+}
+
+async function openDetailModal(category, index) {
+  const items = closetItemsByCategory[category];
+  if (!items || !items[index]) return;
+  const item = items[index];
+
+  detailCurrentCategory = category;
+  detailCurrentIndex = index;
+
+  els.detailCategory.value = category;
+  els.detailColor.value = item.color;
+  setDetailCheckedStyles(item.style);
+  els.detailSeason.value = item.season;
+  els.detailAddedDate.textContent = item.added ? `added ${item.added}` : '';
+
+  els.detailPhotoPreview.src = '';
+  if (item.image) {
+    Vault.loadImageURL(item.image).then((url) => {
+      if (url) els.detailPhotoPreview.src = url;
+    });
+  }
+
+  els.detailModal.showModal();
+}
+
+els.closeDetailBtn.addEventListener('click', () => {
+  els.detailModal.close();
+});
+
+els.detailForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (detailCurrentCategory === null || detailCurrentIndex === null) return;
+
+  const items = closetItemsByCategory[detailCurrentCategory];
+  const item = items[detailCurrentIndex];
+
+  els.saveDetailBtn.disabled = true;
+  els.saveDetailBtn.textContent = 'saving…';
+
+  try {
+    const color = els.detailColor.value.trim();
+    const styles = getDetailCheckedStyles();
+    const styleText = styles.join(', ');
+    const season = els.detailSeason.value.trim();
+
+    const newMarkdown = [
+      `${color} ${detailCurrentCategory.replace(/s$/, '')}`,
+      item.image ? `![[${item.image}]]` : null,
+      `- color: ${color}`,
+      `- style: ${styleText}`,
+      `- season: ${season}`,
+      item.added ? `- added: ${item.added}` : null,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    await Vault.updateItem(detailCurrentCategory, detailCurrentIndex, newMarkdown);
+
+    els.detailModal.close();
+    await renderCloset();
+  } catch (err) {
+    console.error('Update failed:', err);
+    alert('Failed to save changes: ' + err.message);
+  } finally {
+    els.saveDetailBtn.disabled = false;
+    els.saveDetailBtn.textContent = 'save changes';
+  }
+});
+
+els.deleteItemBtn.addEventListener('click', async () => {
+  if (detailCurrentCategory === null || detailCurrentIndex === null) return;
+  const confirmed = confirm('Delete this item from your closet? This removes it from the vault file (the photo stays in Drive).');
+  if (!confirmed) return;
+
+  els.deleteItemBtn.disabled = true;
+  els.deleteItemBtn.textContent = 'deleting…';
+
+  try {
+    await Vault.deleteItem(detailCurrentCategory, detailCurrentIndex);
+    els.detailModal.close();
+    await renderCloset();
+  } catch (err) {
+    console.error('Delete failed:', err);
+    alert('Failed to delete item: ' + err.message);
+  } finally {
+    els.deleteItemBtn.disabled = false;
+    els.deleteItemBtn.textContent = 'delete';
+  }
+});
 
 els.suggestBtn.addEventListener('click', async () => {
   if (!Vault.isConnected()) {
