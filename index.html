@@ -139,6 +139,31 @@
     </form>
   </dialog>
 
+  <!-- Day plan modal -->
+  <dialog id="dayPlanModal" class="tag-modal">
+    <form id="dayPlanForm" class="tag-modal-form">
+      <h2 class="tag-modal-title" id="dayPlanTitle">plan this day</h2>
+
+      <label class="modal-label">style</label>
+      <select id="dayPlanStyle" class="picker-input">
+        <option value="casual">casual</option>
+        <option value="formal">formal</option>
+        <option value="gym">gym / athletic</option>
+        <option value="date">date night</option>
+        <option value="outdoor">outdoor / cold weather</option>
+        <option value="loungewear">loungewear</option>
+      </select>
+
+      <label class="modal-label">weather</label>
+      <input id="dayPlanWeather" class="picker-input" type="text" placeholder="e.g. 45°F, rainy">
+
+      <div class="modal-actions">
+        <button type="button" id="cancelDayPlan" class="btn-tag">cancel</button>
+        <button type="submit" id="submitDayPlan" class="btn-tag btn-tag--accent">generate</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="js/vault.js"></script>
   <script src="js/claude-api.js"></script>
   <script src="js/app.js"></script>
