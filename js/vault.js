@@ -113,7 +113,6 @@ const Vault = (() => {
     try {
       await signIn();
 
-      // Reuse a previously-picked vault folder if we have one saved
       const savedFolderId = localStorage.getItem(VAULT_FOLDER_ID_KEY);
       if (savedFolderId) {
         vaultFolderId = savedFolderId;
@@ -122,9 +121,6 @@ const Vault = (() => {
         localStorage.setItem(VAULT_FOLDER_ID_KEY, vaultFolderId);
       }
 
-      // Guard against nesting: if the user picked the 08-Closet folder itself
-      // (instead of its parent vault folder), use it directly rather than
-      // creating another 08-Closet inside it.
       const pickedName = await getFolderName(vaultFolderId);
       if (pickedName === CLOSET_FOLDER_NAME) {
         closetFolderId = vaultFolderId;
@@ -164,8 +160,19 @@ const Vault = (() => {
       `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`,
       { headers: authHeaders() }
     );
+
+    if (!searchRes.ok) {
+      const errText = await searchRes.text();
+      throw new Error(`Folder search failed for "${name}": ${searchRes.status} ${errText}`);
+    }
+
     const searchData = await searchRes.json();
     if (searchData.files && searchData.files.length > 0) {
+      if (searchData.files.length > 1) {
+        console.warn(
+          `Found ${searchData.files.length} folders named "${name}" under the same parent — using the first one. Consider merging/deleting the extras in Drive.`
+        );
+      }
       return searchData.files[0].id;
     }
 
@@ -179,7 +186,16 @@ const Vault = (() => {
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(metadata),
     });
+
+    if (!createRes.ok) {
+      const errText = await createRes.text();
+      throw new Error(`Folder creation failed for "${name}": ${createRes.status} ${errText}`);
+    }
+
     const createData = await createRes.json();
+    if (!createData.id) {
+      throw new Error(`Folder creation for "${name}" returned no id: ` + JSON.stringify(createData));
+    }
     return createData.id;
   }
 
@@ -238,7 +254,16 @@ const Vault = (() => {
       headers: authHeaders({ 'Content-Type': `multipart/related; boundary=${boundary}` }),
       body,
     });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Text file save failed for "${name}": ${res.status} ${errText}`);
+    }
+
     const data = await res.json();
+    if (!data.id) {
+      throw new Error(`Text file save for "${name}" returned no id: ` + JSON.stringify(data));
+    }
     fileIdCache.set(`${parentId}:${name}`, data.id);
     return data.id;
   }
@@ -272,7 +297,16 @@ const Vault = (() => {
         body: bodyBlob,
       }
     );
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Image upload failed: ${res.status} ${errText}`);
+    }
+
     const data = await res.json();
+    if (!data.id) {
+      throw new Error('Image upload returned no file id: ' + JSON.stringify(data));
+    }
     return data.id;
   }
 
