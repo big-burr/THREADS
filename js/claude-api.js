@@ -131,10 +131,10 @@ const ClaudeAPI = (() => {
     const compressedMediaType = 'image/jpeg';
 
     const categoryHint = knownCategories && knownCategories.length
-      ? `Existing categories in this closet: ${knownCategories.join(', ')}. Reuse one of these if it fits, otherwise propose a new short category name (e.g. "Pants", "Tees", "Sweaters", "Shoes", "Jackets", "Shorts").`
-      : `Propose a short category name (e.g. "Pants", "Tees", "Sweaters", "Shoes", "Jackets", "Shorts").`;
+      ? `Existing categories in this closet: ${knownCategories.join(', ')}. Reuse one of these if it fits, otherwise propose a new short category name from this general list or invent a new one if needed: Tees, Shirts, Flannels, Sweaters, Hoodies, Jackets, Coats, Pants, Jeans, Cargos, Shorts, Skirts, Dresses, Shoes, Sneakers, Boots, Hats, Accessories.`
+      : `Propose a short category name from this general list or invent one if needed: Tees, Shirts, Flannels, Sweaters, Hoodies, Jackets, Coats, Pants, Jeans, Cargos, Shorts, Skirts, Dresses, Shoes, Sneakers, Boots, Hats, Accessories.`;
 
-    const systemPrompt = `You are a clothing-tagging assistant. Respond ONLY with valid JSON, no preamble, no markdown fences. The JSON object must have exactly these keys: "category" (string, singular capitalized like "Tees" or "Pants"), "color" (string, primary color(s)), "styles" (array of strings, choose all that reasonably apply from exactly this list: "casual", "formal", "gym", "date", "outdoor", "loungewear"), "season" (string, e.g. "all-season", "winter", "summer").`;
+    const systemPrompt = `You are a clothing-tagging assistant. Respond ONLY with valid JSON, no preamble, no markdown fences. The JSON object must have exactly these keys: "category" (string, singular capitalized like "Tees" or "Pants"), "color" (string, primary color(s)), "styles" (array of strings, choose all that reasonably apply from exactly this list: "casual", "formal", "business casual", "gym", "date", "loungewear", "outdoor", "workwear", "streetwear", "party", "vintage", "80s", "90s", "minimalist", "preppy", "layerable", "athleisure", "beach", "cold weather", "rainy"), "season" (string, e.g. "all-season", "winter", "summer").`;
 
     const userText = `Tag this clothing item. ${categoryHint}`;
 
