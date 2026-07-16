@@ -1,5 +1,49 @@
 /* app.js — THREADS main controller */
 
+// ---------- Settings ----------
+
+const Settings = (() => {
+  const STORAGE_KEY = 'threads_settings';
+  const DEFAULTS = {
+    resultDisplay: 'both',       // 'both' | 'photos' | 'text'
+    showWornBadges: 'yes',       // 'yes' | 'no'
+    historyDays: 7,              // number of past outfit-log days to include for repeat-avoidance
+    model: 'claude-haiku-4-5-20251001', // API model id
+    imageQuality: 'medium',      // 'low' | 'medium' | 'high'
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { ...DEFAULTS };
+      const parsed = JSON.parse(raw);
+      return { ...DEFAULTS, ...parsed };
+    } catch (err) {
+      console.warn('Failed to load settings, using defaults:', err);
+      return { ...DEFAULTS };
+    }
+  }
+
+  function save(settings) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  }
+
+  function get(key) {
+    return load()[key];
+  }
+
+  // Maps imageQuality setting to (maxDimension, quality) numbers used by
+  // the image-compression step before sending to Claude for tagging.
+  function getImageCompressionParams() {
+    const q = get('imageQuality');
+    if (q === 'low') return { maxDim: 512, quality: 0.7 };
+    if (q === 'high') return { maxDim: 1200, quality: 0.9 };
+    return { maxDim: 800, quality: 0.8 }; // medium / default
+  }
+
+  return { load, save, get, getImageCompressionParams };
+})();
+
 let pendingPhotoBlob = null;
 let pendingMediaType = null;
 let pendingTags = null;
@@ -37,6 +81,17 @@ const els = {
   dayPlanWeather: document.getElementById('dayPlanWeather'),
   cancelDayPlan: document.getElementById('cancelDayPlan'),
   submitDayPlan: document.getElementById('submitDayPlan'),
+
+  settingsBtn: document.getElementById('settingsBtn'),
+  settingsModal: document.getElementById('settingsModal'),
+  settingsForm: document.getElementById('settingsForm'),
+  settingResultDisplay: document.getElementById('settingResultDisplay'),
+  settingShowWornBadges: document.getElementById('settingShowWornBadges'),
+  settingHistoryDays: document.getElementById('settingHistoryDays'),
+  settingModel: document.getElementById('settingModel'),
+  settingImageQuality: document.getElementById('settingImageQuality'),
+  cancelSettings: document.getElementById('cancelSettings'),
+  saveSettings: document.getElementById('saveSettings'),
 
   detailModal: document.getElementById('detailModal'),
   detailForm: document.getElementById('detailForm'),
@@ -312,7 +367,8 @@ function renderGarmentCard(item, category) {
   const imgTag = item.image
     ? `<img class="garment-photo" data-image-path="${item.image}" alt="${item.title}">`
     : '<div class="garment-photo"></div>';
-  const wornBadge = item.worn > 0
+  const showBadges = Settings.get('showWornBadges') === 'yes';
+  const wornBadge = showBadges && item.worn > 0
     ? `<span class="garment-worn-badge">worn ${item.worn}×</span>`
     : '';
   return `
@@ -482,21 +538,26 @@ els.suggestBtn.addEventListener('click', async () => {
 
   try {
     const closetData = await Vault.readAllCategories();
-    const recentLogs = await Vault.readRecentOutfitLogs(7);
+    const recentLogs = await Vault.readRecentOutfitLogs(Settings.get("historyDays"));
     const outfit = await ClaudeAPI.suggestOutfit(closetData, style, weather, recentLogs);
     lastSuggestedOutfit = { outfit, style, weather };
 
-    const photoHtml = await renderOutfitPhotos(outfit);
+    const displayMode = Settings.get('resultDisplay'); // 'both' | 'photos' | 'text'
+    const showPhotos = displayMode === 'both' || displayMode === 'photos';
+    const showText = displayMode === 'both' || displayMode === 'text';
+
+    const photoHtml = showPhotos ? await renderOutfitPhotos(outfit) : '';
 
     els.outfitResult.innerHTML = `
       <div class="rail-title">today's pick</div>
       ${photoHtml ? `<div class="outfit-photo-row">${photoHtml}</div>` : ''}
-      <ul>
-      </ul>
+      ${showText ? '<ul></ul>' : ''}
     `;
 
-    const listEl = els.outfitResult.querySelector('ul');
-    listEl.innerHTML = outfit.items.map((i) => `<li><strong>${i.category}:</strong> ${i.description}</li>`).join('');
+    if (showText) {
+      const listEl = els.outfitResult.querySelector('ul');
+      listEl.innerHTML = outfit.items.map((i) => `<li><strong>${i.category}:</strong> ${i.description}</li>`).join('');
+    }
     const reasoningP = document.createElement('p');
     reasoningP.className = 'garment-style';
     reasoningP.textContent = outfit.reasoning;
@@ -656,7 +717,7 @@ els.dayPlanForm.addEventListener('submit', async (e) => {
 
     let outfit;
     try {
-      const recentLogs = await Vault.readRecentOutfitLogs(7);
+      const recentLogs = await Vault.readRecentOutfitLogs(Settings.get("historyDays"));
       outfit = await ClaudeAPI.suggestOutfit(closetData, style, weather, recentLogs);
     } catch (aiErr) {
       throw new Error('AI suggestion step failed: ' + aiErr.message);
@@ -692,5 +753,39 @@ els.dayPlanForm.addEventListener('submit', async (e) => {
   } finally {
     els.submitDayPlan.disabled = false;
     els.submitDayPlan.textContent = 'generate';
+  }
+});
+
+// ---------- Settings modal ----------
+
+els.settingsBtn.addEventListener('click', () => {
+  const current = Settings.load();
+  els.settingResultDisplay.value = current.resultDisplay;
+  els.settingShowWornBadges.value = current.showWornBadges;
+  els.settingHistoryDays.value = String(current.historyDays);
+  els.settingModel.value = current.model;
+  els.settingImageQuality.value = current.imageQuality;
+  els.settingsModal.showModal();
+});
+
+els.cancelSettings.addEventListener('click', () => {
+  els.settingsModal.close();
+});
+
+els.settingsForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const newSettings = {
+    resultDisplay: els.settingResultDisplay.value,
+    showWornBadges: els.settingShowWornBadges.value,
+    historyDays: parseInt(els.settingHistoryDays.value, 10),
+    model: els.settingModel.value,
+    imageQuality: els.settingImageQuality.value,
+  };
+  Settings.save(newSettings);
+  els.settingsModal.close();
+
+  // Re-render closet so the wear-badge setting takes effect immediately
+  if (Vault.isConnected()) {
+    await renderCloset();
   }
 });
