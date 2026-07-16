@@ -70,6 +70,11 @@
 
     <section id="outfitResult" class="outfit-result hidden"></section>
 
+    <section id="closetInsights" class="closet-insights hidden">
+      <div class="rail-title">closet at a glance <button type="button" id="toggleInsights" class="btn-tag insights-toggle">hide</button></div>
+      <div id="insightsGrid" class="insights-grid"></div>
+    </section>
+
     <section class="week-planner">
       <div class="rail-title">week ahead</div>
       <div id="weekGrid" class="week-grid"></div>
@@ -311,11 +316,21 @@
         <option value="no">off (I'll tag everything manually)</option>
       </select>
 
+      <label class="modal-label">pinned categories (comma-separated, shown first)</label>
+      <input type="text" id="settingPinnedCategories" class="picker-input" placeholder="e.g. Jackets, Tees, Jeans">
+      <p class="status-line" style="margin: 4px 0 0;">order matters — pinned categories appear at the top in the order you list them.</p>
+
       <div class="modal-actions">
         <button type="button" id="cancelSettings" class="btn-tag">cancel</button>
         <button type="submit" id="saveSettings" class="btn-tag btn-tag--accent">save</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- Photo lightbox -->
+  <dialog id="lightboxModal" class="lightbox">
+    <button type="button" id="closeLightbox" class="lightbox-close" aria-label="close">×</button>
+    <img id="lightboxImage" class="lightbox-image" alt="">
   </dialog>
 
   <script src="js/vault.js"></script>
