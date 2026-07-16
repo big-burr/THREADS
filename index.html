@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>THREADS</title>
 <link rel="stylesheet" href="css/style.css">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="THREADS">
 <meta name="theme-color" content="#2B2824">
@@ -59,6 +61,10 @@
       <div id="weekGrid" class="week-grid"></div>
     </section>
 
+    <section class="closet-search">
+      <input type="text" id="closetSearch" class="picker-input" placeholder="search closet (color, brand, material, notes…)">
+    </section>
+
     <div id="closetRails"></div>
 
   </main>
@@ -93,6 +99,24 @@
 
         <label class="modal-label">season</label>
         <input type="text" id="tagSeason" class="picker-input">
+
+        <label class="modal-label">brand (optional)</label>
+        <input type="text" id="tagBrand" class="picker-input">
+
+        <label class="modal-label">material (optional)</label>
+        <input type="text" id="tagMaterial" class="picker-input">
+
+        <label class="modal-label">size (optional)</label>
+        <input type="text" id="tagSize" class="picker-input">
+
+        <label class="modal-label">purchase date (optional)</label>
+        <input type="date" id="tagPurchaseDate" class="picker-input">
+
+        <label class="modal-label">price (optional)</label>
+        <input type="text" id="tagPrice" class="picker-input" placeholder="e.g. $45">
+
+        <label class="modal-label">notes (optional)</label>
+        <textarea id="tagNotes" class="picker-input" rows="2" placeholder="fit, styling ideas, care instructions…"></textarea>
       </div>
 
       <div class="modal-actions">
@@ -105,9 +129,11 @@
   <!-- Item detail / edit modal -->
   <dialog id="detailModal" class="tag-modal">
     <form id="detailForm" class="tag-modal-form">
-      <h2 class="tag-modal-title">edit item</h2>
+      <h2 class="tag-modal-title">item profile</h2>
 
       <img id="detailPhotoPreview" class="photo-preview">
+
+      <div id="detailStatsRow" class="detail-stats-row"></div>
 
       <label class="modal-label">category</label>
       <input type="text" id="detailCategory" class="picker-input" disabled>
@@ -127,6 +153,24 @@
 
       <label class="modal-label">season</label>
       <input type="text" id="detailSeason" class="picker-input">
+
+      <label class="modal-label">brand</label>
+      <input type="text" id="detailBrand" class="picker-input">
+
+      <label class="modal-label">material</label>
+      <input type="text" id="detailMaterial" class="picker-input">
+
+      <label class="modal-label">size</label>
+      <input type="text" id="detailSize" class="picker-input">
+
+      <label class="modal-label">purchase date</label>
+      <input type="date" id="detailPurchaseDate" class="picker-input">
+
+      <label class="modal-label">price</label>
+      <input type="text" id="detailPrice" class="picker-input" placeholder="e.g. $45">
+
+      <label class="modal-label">notes</label>
+      <textarea id="detailNotes" class="picker-input" rows="3"></textarea>
 
       <p class="status-line" id="detailAddedDate"></p>
 
@@ -202,6 +246,12 @@
         <option value="low">low (fastest, cheapest)</option>
         <option value="medium" selected>medium (default)</option>
         <option value="high">high (best accuracy, more cost)</option>
+      </select>
+
+      <label class="modal-label">AI auto-tagging</label>
+      <select id="settingAutoTag" class="picker-input">
+        <option value="yes" selected>on (AI suggests tags from photo)</option>
+        <option value="no">off (I'll tag everything manually)</option>
       </select>
 
       <div class="modal-actions">
