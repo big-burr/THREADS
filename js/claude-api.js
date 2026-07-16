@@ -5,8 +5,20 @@
 */
 
 const ClaudeAPI = (() => {
-  const MODEL = 'claude-haiku-4-5-20251001';
+  const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
   const API_URL = 'https://api.anthropic.com/v1/messages';
+
+  // Reads the model from Settings if available (defined in app.js as a global),
+  // falling back to the default. This lets the settings toggle take effect
+  // immediately without editing this file.
+  function getModel() {
+    try {
+      if (typeof Settings !== 'undefined' && Settings && typeof Settings.get === 'function') {
+        return Settings.get('model') || DEFAULT_MODEL;
+      }
+    } catch (err) {}
+    return DEFAULT_MODEL;
+  }
 
   function getApiKey() {
     return localStorage.getItem('threads_api_key') || '';
@@ -84,7 +96,7 @@ const ClaudeAPI = (() => {
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
-        model: MODEL,
+        model: getModel(),
         max_tokens: maxTokens,
         system: systemPrompt,
         messages,
@@ -103,7 +115,18 @@ const ClaudeAPI = (() => {
 
   // Tag a clothing photo — returns { category, color, style, season }
   async function tagClothingItem(imageBlob, mediaType, knownCategories) {
-    const compressed = await compressImage(imageBlob, 800, 0.8);
+    // Read compression params from Settings if available, else defaults.
+    let maxDim = 800;
+    let quality = 0.8;
+    try {
+      if (typeof Settings !== 'undefined' && Settings && typeof Settings.getImageCompressionParams === 'function') {
+        const p = Settings.getImageCompressionParams();
+        maxDim = p.maxDim;
+        quality = p.quality;
+      }
+    } catch (err) {}
+
+    const compressed = await compressImage(imageBlob, maxDim, quality);
     const base64 = await blobToBase64(compressed);
     const compressedMediaType = 'image/jpeg';
 
