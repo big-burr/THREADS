@@ -639,7 +639,11 @@ els.cancelDayPlan.addEventListener('click', () => {
 
 els.dayPlanForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (!dayPlanCurrentDate) return;
+  e.stopPropagation();
+  if (!dayPlanCurrentDate) {
+    alert('No date selected — please close and tap a day again.');
+    return;
+  }
 
   const style = els.dayPlanStyle.value;
   const weather = els.dayPlanWeather.value.trim() || 'not specified';
@@ -649,14 +653,33 @@ els.dayPlanForm.addEventListener('submit', async (e) => {
 
   try {
     const closetData = await Vault.readAllCategories();
-    const recentLogs = await Vault.readRecentOutfitLogs(7);
-    const outfit = await ClaudeAPI.suggestOutfit(closetData, style, weather, recentLogs);
+
+    let outfit;
+    try {
+      const recentLogs = await Vault.readRecentOutfitLogs(7);
+      outfit = await ClaudeAPI.suggestOutfit(closetData, style, weather, recentLogs);
+    } catch (aiErr) {
+      throw new Error('AI suggestion step failed: ' + aiErr.message);
+    }
+
+    if (!outfit || !Array.isArray(outfit.items)) {
+      throw new Error('AI returned an unexpected format: ' + JSON.stringify(outfit));
+    }
 
     const summary = outfit.items.map((i) => i.description).join(', ');
-    await Vault.saveWeekPlanDay(dayPlanCurrentDate, `${style}: ${summary}`);
 
-    for (const item of outfit.items) {
-      await Vault.incrementWorn(item.category, item.description);
+    try {
+      await Vault.saveWeekPlanDay(dayPlanCurrentDate, `${style}: ${summary}`);
+    } catch (saveErr) {
+      throw new Error('Saving to vault failed: ' + saveErr.message);
+    }
+
+    try {
+      for (const item of outfit.items) {
+        await Vault.incrementWorn(item.category, item.description);
+      }
+    } catch (wornErr) {
+      console.warn('Wear count update failed (non-fatal):', wornErr);
     }
 
     els.dayPlanModal.close();
@@ -665,7 +688,7 @@ els.dayPlanForm.addEventListener('submit', async (e) => {
     await renderCloset();
   } catch (err) {
     console.error('Failed to plan day:', err);
-    alert('Could not plan this day: ' + err.message);
+    alert('Could not plan this day:\n\n' + err.message);
   } finally {
     els.submitDayPlan.disabled = false;
     els.submitDayPlan.textContent = 'generate';
