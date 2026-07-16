@@ -63,6 +63,7 @@ const els = {
   tagStatus: document.getElementById('tagStatus'),
   tagFields: document.getElementById('tagFields'),
   tagCategory: document.getElementById('tagCategory'),
+  tagCategoryOptions: document.getElementById('tagCategoryOptions'),
   tagColor: document.getElementById('tagColor'),
   tagStyleGroup: document.getElementById('tagStyleGroup'),
   tagSeason: document.getElementById('tagSeason'),
@@ -199,6 +200,7 @@ function resetModal() {
   els.tagStatus.classList.add('hidden');
   els.tagFields.classList.add('hidden');
   els.saveItemBtn.disabled = true;
+  els.tagCategory.value = '';
   els.tagColor.value = '';
   setCheckedStyles([]);
   els.tagSeason.value = '';
@@ -208,6 +210,21 @@ function resetModal() {
   els.tagPurchaseDate.value = '';
   els.tagPrice.value = '';
   els.tagNotes.value = '';
+}
+
+// Fills the category input's datalist with autocomplete suggestions (existing
+// categories + optional extra defaults), preserving a typeable free-text input.
+function populateCategoryOptions(categoriesArr) {
+  els.tagCategoryOptions.innerHTML = '';
+  // Deduplicate while preserving order
+  const seen = new Set();
+  for (const cat of categoriesArr) {
+    if (!cat || seen.has(cat)) continue;
+    seen.add(cat);
+    const opt = document.createElement('option');
+    opt.value = cat;
+    els.tagCategoryOptions.appendChild(opt);
+  }
 }
 
 els.itemPhotoInput.addEventListener('change', async (e) => {
@@ -227,14 +244,9 @@ els.itemPhotoInput.addEventListener('change', async (e) => {
   // Manual tagging mode: skip AI, show empty tag fields for user to fill in
   if (!autoTagEnabled) {
     els.tagStatus.classList.add('hidden');
-    els.tagCategory.innerHTML = '';
     const cats = knownCategories.length ? knownCategories : ['Tees', 'Shirts', 'Flannels', 'Sweaters', 'Hoodies', 'Jackets', 'Coats', 'Pants', 'Jeans', 'Cargos', 'Shorts', 'Shoes', 'Sneakers', 'Boots', 'Hats', 'Accessories'];
-    for (const cat of cats) {
-      const opt = document.createElement('option');
-      opt.value = cat;
-      opt.textContent = cat;
-      els.tagCategory.appendChild(opt);
-    }
+    populateCategoryOptions(cats);
+    els.tagCategory.value = '';
     els.tagColor.value = '';
     setCheckedStyles([]);
     els.tagSeason.value = '';
@@ -253,17 +265,9 @@ els.itemPhotoInput.addEventListener('change', async (e) => {
     const tags = await ClaudeAPI.tagClothingItem(file, file.type, knownCategories);
     pendingTags = tags;
 
-    // Populate category dropdown: known categories + the suggested one
-    const catSet = new Set(knownCategories);
-    catSet.add(tags.category);
-    els.tagCategory.innerHTML = '';
-    for (const cat of catSet) {
-      const opt = document.createElement('option');
-      opt.value = cat;
-      opt.textContent = cat;
-      if (cat === tags.category) opt.selected = true;
-      els.tagCategory.appendChild(opt);
-    }
+    // Populate datalist with known categories + AI's suggestion, pre-fill input with the suggestion
+    populateCategoryOptions([tags.category, ...knownCategories]);
+    els.tagCategory.value = tags.category || '';
 
     els.tagColor.value = tags.color || '';
     setCheckedStyles(tags.styles || []);
@@ -275,13 +279,9 @@ els.itemPhotoInput.addEventListener('change', async (e) => {
   } catch (err) {
     console.error('Tagging failed:', err);
     els.tagStatus.textContent = 'AI tagging failed — fill in tags manually below';
-    els.tagCategory.innerHTML = '';
-    for (const cat of knownCategories.length ? knownCategories : ['Misc']) {
-      const opt = document.createElement('option');
-      opt.value = cat;
-      opt.textContent = cat;
-      els.tagCategory.appendChild(opt);
-    }
+    const fallbackCats = knownCategories.length ? knownCategories : ['Tees', 'Shirts', 'Flannels', 'Sweaters', 'Hoodies', 'Jackets', 'Coats', 'Pants', 'Jeans', 'Cargos', 'Shorts', 'Shoes', 'Sneakers', 'Boots', 'Hats', 'Accessories'];
+    populateCategoryOptions(fallbackCats);
+    els.tagCategory.value = '';
     els.tagFields.classList.remove('hidden');
     els.saveItemBtn.disabled = false;
   }
