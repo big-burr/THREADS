@@ -10,6 +10,7 @@ const Settings = (() => {
     historyDays: 7,              // number of past outfit-log days to include for repeat-avoidance
     model: 'claude-haiku-4-5-20251001', // API model id
     imageQuality: 'medium',      // 'low' | 'medium' | 'high'
+    autoTag: 'yes',              // 'yes' | 'no' — whether to call the AI to tag new items
   };
 
   function load() {
@@ -65,6 +66,12 @@ const els = {
   tagColor: document.getElementById('tagColor'),
   tagStyleGroup: document.getElementById('tagStyleGroup'),
   tagSeason: document.getElementById('tagSeason'),
+  tagBrand: document.getElementById('tagBrand'),
+  tagMaterial: document.getElementById('tagMaterial'),
+  tagSize: document.getElementById('tagSize'),
+  tagPurchaseDate: document.getElementById('tagPurchaseDate'),
+  tagPrice: document.getElementById('tagPrice'),
+  tagNotes: document.getElementById('tagNotes'),
   cancelAddItem: document.getElementById('cancelAddItem'),
   saveItemBtn: document.getElementById('saveItemBtn'),
 
@@ -73,6 +80,7 @@ const els = {
   suggestBtn: document.getElementById('suggestBtn'),
   outfitResult: document.getElementById('outfitResult'),
   weekGrid: document.getElementById('weekGrid'),
+  closetSearch: document.getElementById('closetSearch'),
 
   dayPlanModal: document.getElementById('dayPlanModal'),
   dayPlanForm: document.getElementById('dayPlanForm'),
@@ -90,6 +98,7 @@ const els = {
   settingHistoryDays: document.getElementById('settingHistoryDays'),
   settingModel: document.getElementById('settingModel'),
   settingImageQuality: document.getElementById('settingImageQuality'),
+  settingAutoTag: document.getElementById('settingAutoTag'),
   cancelSettings: document.getElementById('cancelSettings'),
   saveSettings: document.getElementById('saveSettings'),
 
@@ -100,6 +109,13 @@ const els = {
   detailColor: document.getElementById('detailColor'),
   detailStyleGroup: document.getElementById('detailStyleGroup'),
   detailSeason: document.getElementById('detailSeason'),
+  detailBrand: document.getElementById('detailBrand'),
+  detailMaterial: document.getElementById('detailMaterial'),
+  detailSize: document.getElementById('detailSize'),
+  detailPurchaseDate: document.getElementById('detailPurchaseDate'),
+  detailPrice: document.getElementById('detailPrice'),
+  detailNotes: document.getElementById('detailNotes'),
+  detailStatsRow: document.getElementById('detailStatsRow'),
   detailAddedDate: document.getElementById('detailAddedDate'),
   deleteItemBtn: document.getElementById('deleteItemBtn'),
   closeDetailBtn: document.getElementById('closeDetailBtn'),
@@ -186,6 +202,12 @@ function resetModal() {
   els.tagColor.value = '';
   setCheckedStyles([]);
   els.tagSeason.value = '';
+  els.tagBrand.value = '';
+  els.tagMaterial.value = '';
+  els.tagSize.value = '';
+  els.tagPurchaseDate.value = '';
+  els.tagPrice.value = '';
+  els.tagNotes.value = '';
 }
 
 els.itemPhotoInput.addEventListener('change', async (e) => {
@@ -199,13 +221,35 @@ els.itemPhotoInput.addEventListener('change', async (e) => {
   els.itemPhotoPreview.src = previewUrl;
   els.itemPhotoPreview.classList.remove('hidden');
 
+  const autoTagEnabled = Settings.get('autoTag') === 'yes';
+  const knownCategories = await Vault.listCategoryFiles();
+
+  // Manual tagging mode: skip AI, show empty tag fields for user to fill in
+  if (!autoTagEnabled) {
+    els.tagStatus.classList.add('hidden');
+    els.tagCategory.innerHTML = '';
+    const cats = knownCategories.length ? knownCategories : ['Tees', 'Pants', 'Sweaters', 'Shoes', 'Jackets', 'Shorts'];
+    for (const cat of cats) {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      els.tagCategory.appendChild(opt);
+    }
+    els.tagColor.value = '';
+    setCheckedStyles([]);
+    els.tagSeason.value = '';
+    els.tagFields.classList.remove('hidden');
+    els.saveItemBtn.disabled = false;
+    return;
+  }
+
+  // AI tagging mode
   els.tagStatus.classList.remove('hidden');
   els.tagStatus.textContent = 'tagging with AI…';
   els.tagFields.classList.add('hidden');
   els.saveItemBtn.disabled = true;
 
   try {
-    const knownCategories = await Vault.listCategoryFiles();
     const tags = await ClaudeAPI.tagClothingItem(file, file.type, knownCategories);
     pendingTags = tags;
 
@@ -231,7 +275,6 @@ els.itemPhotoInput.addEventListener('change', async (e) => {
   } catch (err) {
     console.error('Tagging failed:', err);
     els.tagStatus.textContent = 'AI tagging failed — fill in tags manually below';
-    const knownCategories = await Vault.listCategoryFiles();
     els.tagCategory.innerHTML = '';
     for (const cat of knownCategories.length ? knownCategories : ['Misc']) {
       const opt = document.createElement('option');
@@ -257,6 +300,12 @@ els.addItemForm.addEventListener('submit', async (e) => {
     const styles = getCheckedStyles();
     const styleText = styles.join(', ');
     const season = els.tagSeason.value.trim();
+    const brand = els.tagBrand.value.trim();
+    const material = els.tagMaterial.value.trim();
+    const size = els.tagSize.value.trim();
+    const purchaseDate = els.tagPurchaseDate.value.trim();
+    const price = els.tagPrice.value.trim();
+    const notes = els.tagNotes.value.trim();
 
     const ext = (pendingMediaType.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
     const timestamp = Date.now();
@@ -265,14 +314,22 @@ els.addItemForm.addEventListener('submit', async (e) => {
     const imagePath = await Vault.saveImage(filename, pendingPhotoBlob);
 
     const dateAdded = new Date().toISOString().slice(0, 10);
-    const itemMarkdown = [
+    const lines = [
       `### ${color} ${category.replace(/s$/, '')}`,
       `![[${imagePath}]]`,
       `- color: ${color}`,
       `- style: ${styleText}`,
       `- season: ${season}`,
-      `- added: ${dateAdded}`,
-    ].join('\n');
+    ];
+    if (brand) lines.push(`- brand: ${brand}`);
+    if (material) lines.push(`- material: ${material}`);
+    if (size) lines.push(`- size: ${size}`);
+    if (purchaseDate) lines.push(`- purchased: ${purchaseDate}`);
+    if (price) lines.push(`- price: ${price}`);
+    if (notes) lines.push(`- notes: ${notes.replace(/\n/g, ' ')}`);
+    lines.push(`- added: ${dateAdded}`);
+
+    const itemMarkdown = lines.join('\n');
 
     await Vault.appendItem(category, itemMarkdown);
 
@@ -291,13 +348,49 @@ els.addItemForm.addEventListener('submit', async (e) => {
 // ---------- Render closet rails ----------
 
 let closetItemsByCategory = {}; // cache for opening detail view without re-parsing
+let currentSearchQuery = '';
+
+// Debounce timer for search input to avoid re-rendering on every keystroke
+let searchDebounceTimer = null;
+
+els.closetSearch.addEventListener('input', () => {
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => {
+    currentSearchQuery = els.closetSearch.value.trim().toLowerCase();
+    renderCloset();
+  }, 200);
+});
+
+// Filters an array of parsed items by the current search query, matching
+// against title/color/brand/material/style/notes. Blank query returns all.
+function filterItemsBySearch(items) {
+  if (!currentSearchQuery) return items;
+  const q = currentSearchQuery;
+  return items.filter((item) => {
+    const searchable = [
+      item.title,
+      item.color,
+      item.style,
+      item.season,
+      item.brand,
+      item.material,
+      item.size,
+      item.notes,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return searchable.includes(q);
+  });
+}
 
 async function renderCloset() {
   const categories = await Vault.readAllCategories();
   els.closetRails.innerHTML = '';
   closetItemsByCategory = {};
 
-  const catNames = Object.keys(categories);
+  // Sort category names alphabetically so ordering is stable across sessions
+  const catNames = Object.keys(categories).sort((a, b) => a.localeCompare(b));
   if (catNames.length === 0) {
     els.closetRails.innerHTML = '<p class="status-line">no items yet — add your first piece</p>';
     return;
@@ -307,12 +400,23 @@ async function renderCloset() {
     const items = parseCategoryMarkdown(categories[cat]);
     closetItemsByCategory[cat] = items;
 
+    // Filter items if search query is active
+    const filteredItems = filterItemsBySearch(items);
+    const hidden = items.length - filteredItems.length;
+
+    const totalWear = items.reduce((sum, item) => sum + (item.worn || 0), 0);
+    const wearText = totalWear > 0 ? ` · worn ${totalWear}× total` : '';
+    const hiddenText = hidden > 0 ? ` · <span class="rail-hidden">${hidden} hidden by search</span>` : '';
+
+    // Skip category entirely if all items filtered out
+    if (filteredItems.length === 0 && currentSearchQuery) continue;
+
     const rail = document.createElement('section');
     rail.className = 'category-rail';
     rail.innerHTML = `
-      <div class="rail-title">${cat} <span class="rail-count">${items.length} item${items.length === 1 ? '' : 's'}</span></div>
+      <div class="rail-title">${cat} <span class="rail-count">${items.length} item${items.length === 1 ? '' : 's'}${wearText}${hiddenText}</span></div>
       <div class="rail-track">
-        ${items.map((item) => renderGarmentCard(item, cat)).join('')}
+        ${filteredItems.map((item) => renderGarmentCard(item, cat)).join('')}
       </div>
     `;
     els.closetRails.appendChild(rail);
@@ -349,6 +453,12 @@ function parseCategoryMarkdown(content) {
     const seasonMatch = block.match(/- season: (.+)/);
     const addedMatch = block.match(/- added: (.+)/);
     const wornMatch = block.match(/- worn: (\d+)/);
+    const brandMatch = block.match(/- brand: (.+)/);
+    const materialMatch = block.match(/- material: (.+)/);
+    const sizeMatch = block.match(/- size: (.+)/);
+    const purchasedMatch = block.match(/- purchased: (.+)/);
+    const priceMatch = block.match(/- price: (.+)/);
+    const notesMatch = block.match(/- notes: (.+)/);
     return {
       index,
       raw: block,
@@ -359,6 +469,12 @@ function parseCategoryMarkdown(content) {
       season: seasonMatch ? seasonMatch[1].trim() : '',
       added: addedMatch ? addedMatch[1].trim() : '',
       worn: wornMatch ? parseInt(wornMatch[1], 10) : 0,
+      brand: brandMatch ? brandMatch[1].trim() : '',
+      material: materialMatch ? materialMatch[1].trim() : '',
+      size: sizeMatch ? sizeMatch[1].trim() : '',
+      purchased: purchasedMatch ? purchasedMatch[1].trim() : '',
+      price: priceMatch ? priceMatch[1].trim() : '',
+      notes: notesMatch ? notesMatch[1].trim() : '',
     };
   });
 }
@@ -413,7 +529,27 @@ async function openDetailModal(category, index) {
   els.detailColor.value = item.color;
   setDetailCheckedStyles(item.style);
   els.detailSeason.value = item.season;
+  els.detailBrand.value = item.brand || '';
+  els.detailMaterial.value = item.material || '';
+  els.detailSize.value = item.size || '';
+  els.detailPurchaseDate.value = item.purchased || '';
+  els.detailPrice.value = item.price || '';
+  els.detailNotes.value = item.notes || '';
   els.detailAddedDate.textContent = item.added ? `added ${item.added}` : '';
+
+  // Stats row: wear count + computed age from purchase date
+  const worn = item.worn || 0;
+  const ageText = computeAgeText(item.purchased);
+  els.detailStatsRow.innerHTML = `
+    <div class="detail-stat">
+      <div class="detail-stat-value">${worn}</div>
+      <div class="detail-stat-label">times worn</div>
+    </div>
+    <div class="detail-stat">
+      <div class="detail-stat-value">${ageText || '—'}</div>
+      <div class="detail-stat-label">age</div>
+    </div>
+  `;
 
   els.detailPhotoPreview.src = '';
   if (item.image) {
@@ -423,6 +559,22 @@ async function openDetailModal(category, index) {
   }
 
   els.detailModal.showModal();
+}
+
+// Computes a short readable age from a YYYY-MM-DD purchase date.
+// Client-side only, no API cost.
+function computeAgeText(purchasedDateStr) {
+  if (!purchasedDateStr) return '';
+  const purchased = new Date(purchasedDateStr);
+  if (isNaN(purchased.getTime())) return '';
+  const now = new Date();
+  const msDiff = now - purchased;
+  const days = Math.floor(msDiff / (1000 * 60 * 60 * 24));
+  if (days < 30) return `${days}d`;
+  const months = Math.floor(days / 30.44);
+  if (months < 12) return `${months}mo`;
+  const years = (days / 365.25).toFixed(1);
+  return `${years}y`;
 }
 
 els.closeDetailBtn.addEventListener('click', () => {
@@ -444,17 +596,30 @@ els.detailForm.addEventListener('submit', async (e) => {
     const styles = getDetailCheckedStyles();
     const styleText = styles.join(', ');
     const season = els.detailSeason.value.trim();
+    const brand = els.detailBrand.value.trim();
+    const material = els.detailMaterial.value.trim();
+    const size = els.detailSize.value.trim();
+    const purchased = els.detailPurchaseDate.value.trim();
+    const price = els.detailPrice.value.trim();
+    const notes = els.detailNotes.value.trim();
 
-    const newMarkdown = [
+    const lines = [
       `${color} ${detailCurrentCategory.replace(/s$/, '')}`,
-      item.image ? `![[${item.image}]]` : null,
-      `- color: ${color}`,
-      `- style: ${styleText}`,
-      `- season: ${season}`,
-      item.added ? `- added: ${item.added}` : null,
-    ]
-      .filter(Boolean)
-      .join('\n');
+    ];
+    if (item.image) lines.push(`![[${item.image}]]`);
+    lines.push(`- color: ${color}`);
+    lines.push(`- style: ${styleText}`);
+    lines.push(`- season: ${season}`);
+    if (brand) lines.push(`- brand: ${brand}`);
+    if (material) lines.push(`- material: ${material}`);
+    if (size) lines.push(`- size: ${size}`);
+    if (purchased) lines.push(`- purchased: ${purchased}`);
+    if (price) lines.push(`- price: ${price}`);
+    if (notes) lines.push(`- notes: ${notes.replace(/\n/g, ' ')}`);
+    if (item.added) lines.push(`- added: ${item.added}`);
+    if (item.worn && item.worn > 0) lines.push(`- worn: ${item.worn}`);
+
+    const newMarkdown = lines.join('\n');
 
     await Vault.updateItem(detailCurrentCategory, detailCurrentIndex, newMarkdown);
 
@@ -765,6 +930,7 @@ els.settingsBtn.addEventListener('click', () => {
   els.settingHistoryDays.value = String(current.historyDays);
   els.settingModel.value = current.model;
   els.settingImageQuality.value = current.imageQuality;
+  els.settingAutoTag.value = current.autoTag;
   els.settingsModal.showModal();
 });
 
@@ -780,6 +946,7 @@ els.settingsForm.addEventListener('submit', async (e) => {
     historyDays: parseInt(els.settingHistoryDays.value, 10),
     model: els.settingModel.value,
     imageQuality: els.settingImageQuality.value,
+    autoTag: els.settingAutoTag.value,
   };
   Settings.save(newSettings);
   els.settingsModal.close();
