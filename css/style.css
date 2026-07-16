@@ -520,9 +520,102 @@ textarea.picker-input {
   font-family: var(--font-body);
 }
 
+.closet-insights {
+  margin-bottom: 32px;
+}
+
+.insights-toggle {
+  margin-left: 8px;
+  font-size: 10px;
+  padding: 4px 10px 4px 16px;
+}
+
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.insight-card {
+  background: var(--canvas-raised);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+}
+
+.insight-value {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--thread);
+  line-height: 1.1;
+}
+
+.insight-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--thread-soft);
+  margin-top: 4px;
+}
+
+.insight-sub {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--thread-soft);
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
 .rail-hidden {
   color: var(--rust);
   font-style: italic;
+}
+
+.lightbox {
+  background: rgba(43, 40, 36, 0.95);
+  border: none;
+  padding: 0;
+  max-width: 100vw;
+  max-height: 100vh;
+  width: 100vw;
+  height: 100vh;
+}
+
+.lightbox::backdrop {
+  background: rgba(43, 40, 36, 0.95);
+}
+
+.lightbox-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  margin: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: transparent;
+  color: var(--canvas-raised);
+  border: 1.5px solid var(--canvas-raised);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  z-index: 10;
+  padding: 0;
+  line-height: 1;
 }
 
 .garment-card:active {
