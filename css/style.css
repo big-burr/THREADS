@@ -477,6 +477,54 @@ body {
   margin-top: 4px;
 }
 
+.detail-stats-row {
+  display: flex;
+  gap: 14px;
+  margin: 12px 0 4px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.detail-stat {
+  flex: 1;
+  text-align: center;
+}
+
+.detail-stat-value {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--thread);
+}
+
+.detail-stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--thread-soft);
+  margin-top: 2px;
+}
+
+textarea.picker-input {
+  font-family: var(--font-body);
+  resize: vertical;
+}
+
+.closet-search {
+  margin-bottom: 20px;
+}
+
+.closet-search input {
+  font-family: var(--font-body);
+}
+
+.rail-hidden {
+  color: var(--rust);
+  font-style: italic;
+}
+
 .garment-card:active {
   transform: scale(0.97);
 }
