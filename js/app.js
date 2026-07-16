@@ -228,7 +228,7 @@ els.itemPhotoInput.addEventListener('change', async (e) => {
   if (!autoTagEnabled) {
     els.tagStatus.classList.add('hidden');
     els.tagCategory.innerHTML = '';
-    const cats = knownCategories.length ? knownCategories : ['Tees', 'Pants', 'Sweaters', 'Shoes', 'Jackets', 'Shorts'];
+    const cats = knownCategories.length ? knownCategories : ['Tees', 'Shirts', 'Flannels', 'Sweaters', 'Hoodies', 'Jackets', 'Coats', 'Pants', 'Jeans', 'Cargos', 'Shorts', 'Shoes', 'Sneakers', 'Boots', 'Hats', 'Accessories'];
     for (const cat of cats) {
       const opt = document.createElement('option');
       opt.value = cat;
@@ -537,9 +537,10 @@ async function openDetailModal(category, index) {
   els.detailNotes.value = item.notes || '';
   els.detailAddedDate.textContent = item.added ? `added ${item.added}` : '';
 
-  // Stats row: wear count + computed age from purchase date
+  // Stats row: wear count + computed age from purchase date + cost-per-wear
   const worn = item.worn || 0;
   const ageText = computeAgeText(item.purchased);
+  const cpwText = computeCostPerWear(item.price, worn);
   els.detailStatsRow.innerHTML = `
     <div class="detail-stat">
       <div class="detail-stat-value">${worn}</div>
@@ -548,6 +549,10 @@ async function openDetailModal(category, index) {
     <div class="detail-stat">
       <div class="detail-stat-value">${ageText || '—'}</div>
       <div class="detail-stat-label">age</div>
+    </div>
+    <div class="detail-stat">
+      <div class="detail-stat-value">${cpwText || '—'}</div>
+      <div class="detail-stat-label">$/wear</div>
     </div>
   `;
 
@@ -575,6 +580,19 @@ function computeAgeText(purchasedDateStr) {
   if (months < 12) return `${months}mo`;
   const years = (days / 365.25).toFixed(1);
   return `${years}y`;
+}
+
+// Computes cost-per-wear from a price string (e.g. "$45", "45", "$45.99")
+// and wear count. Client-side only, no API cost. Returns empty string if
+// either field is missing or price can't be parsed.
+function computeCostPerWear(priceStr, wornCount) {
+  if (!priceStr || !wornCount || wornCount <= 0) return '';
+  // Extract a number from the price string, ignoring $ or other currency chars
+  const priceNum = parseFloat(String(priceStr).replace(/[^0-9.]/g, ''));
+  if (isNaN(priceNum) || priceNum <= 0) return '';
+  const cpw = priceNum / wornCount;
+  // Format: under $10 shows two decimals, above shows one
+  return cpw < 10 ? `$${cpw.toFixed(2)}` : `$${cpw.toFixed(1)}`;
 }
 
 els.closeDetailBtn.addEventListener('click', () => {
