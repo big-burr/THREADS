@@ -11,6 +11,7 @@ const Settings = (() => {
     model: 'claude-haiku-4-5-20251001', // API model id
     imageQuality: 'medium',      // 'low' | 'medium' | 'high'
     autoTag: 'yes',              // 'yes' | 'no' — whether to call the AI to tag new items
+    pinnedCategories: '',        // comma-separated list of category names to show first, in that order
   };
 
   function load() {
@@ -83,6 +84,14 @@ const els = {
   weekGrid: document.getElementById('weekGrid'),
   closetSearch: document.getElementById('closetSearch'),
 
+  closetInsights: document.getElementById('closetInsights'),
+  insightsGrid: document.getElementById('insightsGrid'),
+  toggleInsights: document.getElementById('toggleInsights'),
+
+  lightboxModal: document.getElementById('lightboxModal'),
+  lightboxImage: document.getElementById('lightboxImage'),
+  closeLightbox: document.getElementById('closeLightbox'),
+
   dayPlanModal: document.getElementById('dayPlanModal'),
   dayPlanForm: document.getElementById('dayPlanForm'),
   dayPlanTitle: document.getElementById('dayPlanTitle'),
@@ -100,6 +109,7 @@ const els = {
   settingModel: document.getElementById('settingModel'),
   settingImageQuality: document.getElementById('settingImageQuality'),
   settingAutoTag: document.getElementById('settingAutoTag'),
+  settingPinnedCategories: document.getElementById('settingPinnedCategories'),
   cancelSettings: document.getElementById('cancelSettings'),
   saveSettings: document.getElementById('saveSettings'),
 
@@ -389,8 +399,25 @@ async function renderCloset() {
   els.closetRails.innerHTML = '';
   closetItemsByCategory = {};
 
-  // Sort category names alphabetically so ordering is stable across sessions
-  const catNames = Object.keys(categories).sort((a, b) => a.localeCompare(b));
+  // Sort categories: pinned first (in specified order), then remaining alphabetically
+  const pinnedRaw = Settings.get('pinnedCategories') || '';
+  const pinnedList = pinnedRaw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const allCatNames = Object.keys(categories);
+  const pinnedPresent = pinnedList.filter((p) =>
+    allCatNames.some((c) => c.toLowerCase() === p.toLowerCase())
+  );
+  // Normalize to the actual casing used in the vault
+  const pinnedNormalized = pinnedPresent.map(
+    (p) => allCatNames.find((c) => c.toLowerCase() === p.toLowerCase())
+  );
+  const remaining = allCatNames
+    .filter((c) => !pinnedNormalized.includes(c))
+    .sort((a, b) => a.localeCompare(b));
+  const catNames = [...pinnedNormalized, ...remaining];
+
   if (catNames.length === 0) {
     els.closetRails.innerHTML = '<p class="status-line">no items yet — add your first piece</p>';
     return;
@@ -439,7 +466,157 @@ async function renderCloset() {
       });
     });
   }
+
+  renderInsights();
 }
+
+// ---------- Closet insights dashboard ----------
+
+const INSIGHTS_COLLAPSED_KEY = 'threads_insights_collapsed';
+
+function renderInsights() {
+  if (!closetItemsByCategory || Object.keys(closetItemsByCategory).length === 0) {
+    els.closetInsights.classList.add('hidden');
+    return;
+  }
+
+  const allItems = [];
+  for (const cat of Object.keys(closetItemsByCategory)) {
+    for (const item of closetItemsByCategory[cat]) {
+      allItems.push({ ...item, category: cat });
+    }
+  }
+
+  if (allItems.length === 0) {
+    els.closetInsights.classList.add('hidden');
+    return;
+  }
+  els.closetInsights.classList.remove('hidden');
+
+  // Restore collapsed state
+  const collapsed = localStorage.getItem(INSIGHTS_COLLAPSED_KEY) === 'yes';
+  els.insightsGrid.style.display = collapsed ? 'none' : '';
+  els.toggleInsights.textContent = collapsed ? 'show' : 'hide';
+
+  // --- Compute stats ---
+  const totalItems = allItems.length;
+
+  // Total closet value: sum all parseable prices
+  let totalValue = 0;
+  let itemsWithPrice = 0;
+  for (const item of allItems) {
+    const priceNum = item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : NaN;
+    if (!isNaN(priceNum) && priceNum > 0) {
+      totalValue += priceNum;
+      itemsWithPrice++;
+    }
+  }
+
+  // Total wears across everything
+  const totalWears = allItems.reduce((sum, item) => sum + (item.worn || 0), 0);
+
+  // Most worn item
+  const mostWorn = allItems.reduce((best, item) => {
+    const w = item.worn || 0;
+    return w > (best ? best.worn || 0 : 0) ? item : best;
+  }, null);
+
+  // Least worn item that has been worn at least once
+  const wornItems = allItems.filter((i) => (i.worn || 0) > 0);
+  const leastWorn = wornItems.length > 0
+    ? wornItems.reduce((worst, item) => ((item.worn || 0) < (worst.worn || 0) ? item : worst))
+    : null;
+
+  // Items never worn
+  const neverWornCount = allItems.filter((i) => (i.worn || 0) === 0).length;
+
+  // Oldest item by purchase date
+  let oldestItem = null;
+  for (const item of allItems) {
+    if (!item.purchased) continue;
+    const d = new Date(item.purchased);
+    if (isNaN(d.getTime())) continue;
+    if (!oldestItem || d < new Date(oldestItem.purchased)) oldestItem = item;
+  }
+
+  // Average cost-per-wear across items that have both price and wear count
+  let cpwSum = 0;
+  let cpwCount = 0;
+  for (const item of allItems) {
+    const priceNum = item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : NaN;
+    if (isNaN(priceNum) || priceNum <= 0) continue;
+    if (!item.worn || item.worn <= 0) continue;
+    cpwSum += priceNum / item.worn;
+    cpwCount++;
+  }
+  const avgCpw = cpwCount > 0 ? cpwSum / cpwCount : null;
+
+  // Category breakdown text
+  const catCounts = Object.keys(closetItemsByCategory)
+    .map((cat) => ({ cat, n: closetItemsByCategory[cat].length }))
+    .sort((a, b) => b.n - a.n)
+    .slice(0, 3)
+    .map((c) => `${c.cat} (${c.n})`)
+    .join(', ');
+
+  // --- Render cards ---
+  const cards = [
+    {
+      value: totalItems,
+      label: 'total items',
+      sub: catCounts ? `top: ${catCounts}` : '',
+    },
+    {
+      value: totalValue > 0 ? `$${totalValue.toFixed(0)}` : '—',
+      label: 'wardrobe value',
+      sub: itemsWithPrice > 0 ? `${itemsWithPrice} of ${totalItems} items priced` : 'add prices to track',
+    },
+    {
+      value: totalWears,
+      label: 'total wears logged',
+      sub: neverWornCount > 0 ? `${neverWornCount} never worn` : 'all items worn at least once',
+    },
+    {
+      value: avgCpw !== null ? (avgCpw < 10 ? `$${avgCpw.toFixed(2)}` : `$${avgCpw.toFixed(1)}`) : '—',
+      label: 'avg $/wear',
+      sub: cpwCount > 0 ? `across ${cpwCount} items with data` : 'need prices + wears',
+    },
+    {
+      value: mostWorn && mostWorn.worn > 0 ? `${mostWorn.worn}×` : '—',
+      label: 'most worn',
+      sub: mostWorn && mostWorn.worn > 0 ? `${mostWorn.title} (${mostWorn.category})` : '',
+    },
+    {
+      value: leastWorn ? `${leastWorn.worn}×` : '—',
+      label: 'least worn (of used)',
+      sub: leastWorn ? `${leastWorn.title} (${leastWorn.category})` : '',
+    },
+    {
+      value: oldestItem ? computeAgeText(oldestItem.purchased) : '—',
+      label: 'oldest item',
+      sub: oldestItem ? `${oldestItem.title} (${oldestItem.category})` : 'add purchase dates',
+    },
+  ];
+
+  els.insightsGrid.innerHTML = cards
+    .map(
+      (c) => `
+        <div class="insight-card">
+          <div class="insight-value">${c.value}</div>
+          <div class="insight-label">${c.label}</div>
+          ${c.sub ? `<div class="insight-sub">${c.sub}</div>` : ''}
+        </div>
+      `
+    )
+    .join('');
+}
+
+els.toggleInsights.addEventListener('click', () => {
+  const isHidden = els.insightsGrid.style.display === 'none';
+  els.insightsGrid.style.display = isHidden ? '' : 'none';
+  els.toggleInsights.textContent = isHidden ? 'hide' : 'show';
+  localStorage.setItem(INSIGHTS_COLLAPSED_KEY, isHidden ? 'no' : 'yes');
+});
 
 function parseCategoryMarkdown(content) {
   if (!content) return [];
@@ -949,6 +1126,7 @@ els.settingsBtn.addEventListener('click', () => {
   els.settingModel.value = current.model;
   els.settingImageQuality.value = current.imageQuality;
   els.settingAutoTag.value = current.autoTag;
+  els.settingPinnedCategories.value = current.pinnedCategories || '';
   els.settingsModal.showModal();
 });
 
@@ -965,12 +1143,43 @@ els.settingsForm.addEventListener('submit', async (e) => {
     model: els.settingModel.value,
     imageQuality: els.settingImageQuality.value,
     autoTag: els.settingAutoTag.value,
+    pinnedCategories: els.settingPinnedCategories.value.trim(),
   };
   Settings.save(newSettings);
   els.settingsModal.close();
 
-  // Re-render closet so the wear-badge setting takes effect immediately
+  // Re-render closet so setting changes take effect immediately
   if (Vault.isConnected()) {
     await renderCloset();
+  }
+});
+
+// ---------- Photo lightbox ----------
+
+function openLightbox(imgSrc, altText) {
+  if (!imgSrc) return;
+  els.lightboxImage.src = imgSrc;
+  els.lightboxImage.alt = altText || '';
+  els.lightboxModal.showModal();
+}
+
+els.closeLightbox.addEventListener('click', () => {
+  els.lightboxModal.close();
+  els.lightboxImage.src = '';
+});
+
+// Close when tapping backdrop / anywhere outside the image
+els.lightboxModal.addEventListener('click', (e) => {
+  if (e.target === els.lightboxModal || e.target === els.lightboxImage) {
+    els.lightboxModal.close();
+    els.lightboxImage.src = '';
+  }
+});
+
+// Wire the profile modal's photo to open lightbox on tap
+els.detailPhotoPreview.style.cursor = 'zoom-in';
+els.detailPhotoPreview.addEventListener('click', () => {
+  if (els.detailPhotoPreview.src && !els.detailPhotoPreview.src.endsWith('#')) {
+    openLightbox(els.detailPhotoPreview.src, els.detailPhotoPreview.alt);
   }
 });
