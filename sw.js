@@ -1,5 +1,5 @@
 // THREADS service worker — bump CACHE_VERSION on every deploy
-const CACHE_VERSION = 'threads-v17';
+const CACHE_VERSION = 'threads-v18';
 const ASSETS = [
   './',
   './index.html',
