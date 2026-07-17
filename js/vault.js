@@ -123,7 +123,17 @@ const Vault = (() => {
       // Reuse a previously-picked vault folder if we have one saved
       const savedFolderId = localStorage.getItem(VAULT_FOLDER_ID_KEY);
       if (savedFolderId) {
-        vaultFolderId = savedFolderId;
+        // Verify the saved folder still exists and is accessible.
+        // If not (deleted, permissions changed, wrong account), clear and re-prompt.
+        const savedName = await getFolderName(savedFolderId);
+        if (!savedName) {
+          console.info('Saved vault folder no longer accessible — reselecting');
+          localStorage.removeItem(VAULT_FOLDER_ID_KEY);
+          vaultFolderId = await pickVaultFolder();
+          localStorage.setItem(VAULT_FOLDER_ID_KEY, vaultFolderId);
+        } else {
+          vaultFolderId = savedFolderId;
+        }
       } else {
         vaultFolderId = await pickVaultFolder();
         localStorage.setItem(VAULT_FOLDER_ID_KEY, vaultFolderId);
