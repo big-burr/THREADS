@@ -700,21 +700,57 @@ textarea.picker-input {
   padding-right: 28px;
 }
 
+/* Header: warm wooden planks with grain and knots */
 [data-theme="woods"] .site-header {
-  border-bottom-width: 3px;
-  border-bottom-style: double;
+  background: url('../assets/woods-header.svg');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border-bottom: 4px double #3D2210;
+  color: #F4E8D0;
+  box-shadow: 0 2px 0 rgba(60, 40, 20, 0.35);
 }
 
 [data-theme="woods"] .wordmark-main {
   letter-spacing: 3px;
   font-weight: 700;
   font-family: 'Frank Ruhl Libre', serif;
+  color: #F4E8D0;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="woods"] .wordmark-sub {
   font-style: italic;
   text-transform: none;
   letter-spacing: 0.5px;
+  color: #E8C88A;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="woods"] .site-header .btn-tag {
+  background: linear-gradient(180deg, #F1EBDB 0%, #E0D7BE 100%);
+  color: var(--thread);
+  border-color: #3D2210;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="woods"] .site-header .btn-tag--accent {
+  background: linear-gradient(180deg, var(--denim) 0%, var(--denim-dark) 100%);
+  color: #F4E8D0;
+}
+
+/* Closet section: darker mossy forest floor with layered branches */
+[data-theme="woods"] #closetRails {
+  background:
+    url('../assets/woods-closet.svg') var(--canvas);
+  background-size: 500px 500px;
+  background-repeat: repeat;
+  padding: 24px 16px;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 2px 4px rgba(60, 40, 20, 0.15),
+    inset 0 -2px 4px rgba(60, 40, 20, 0.15);
+  border: 2px solid rgba(60, 40, 20, 0.2);
+  margin-top: 12px;
 }
 
 /* Buttons: rounder, more like carved wooden tags */
@@ -846,10 +882,15 @@ textarea.picker-input {
     inset -4px 0 0 rgba(31, 58, 85, 0.15);
 }
 
-/* Header: heavy carved feel */
+/* Header: carved stone slab with runic inscription band */
 [data-theme="iceland"] .site-header {
-  border-bottom: 4px double var(--thread);
+  background: url('../assets/iceland-header.svg');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border-bottom: 4px double #0A1520;
+  color: #F0F4F8;
   padding: 28px 32px;
+  box-shadow: 0 3px 0 rgba(10, 21, 32, 0.5);
 }
 
 [data-theme="iceland"] .wordmark-main {
@@ -857,6 +898,8 @@ textarea.picker-input {
   font-weight: 900;
   letter-spacing: 8px;
   font-size: 26px;
+  color: #F0F4F8;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="iceland"] .wordmark-sub {
@@ -865,7 +908,35 @@ textarea.picker-input {
   letter-spacing: 2px;
   font-size: 12px;
   text-transform: none;
-  color: var(--rust);
+  color: #E5C860;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="iceland"] .site-header .btn-tag {
+  background: linear-gradient(135deg, #E8ECEE 0%, #D0D8DE 100%);
+  color: var(--thread);
+  border-color: #0A1520;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="iceland"] .site-header .btn-tag--accent {
+  background: linear-gradient(135deg, #2A4A65 0%, #0F2438 100%);
+  color: #F0F4F8;
+}
+
+/* Closet section: engraved monolith with larger runes */
+[data-theme="iceland"] #closetRails {
+  background:
+    url('../assets/iceland-closet.svg') var(--canvas);
+  background-size: 360px 360px;
+  background-repeat: repeat;
+  padding: 24px 16px;
+  border-radius: 0;
+  box-shadow:
+    inset 0 3px 6px rgba(10, 21, 32, 0.25),
+    inset 0 -3px 6px rgba(10, 21, 32, 0.25);
+  border: 2px solid var(--thread);
+  margin-top: 12px;
 }
 
 /* Buttons: rune-carved stone tablets — sharp corners, chiseled feel */
