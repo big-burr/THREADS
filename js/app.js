@@ -66,6 +66,7 @@ const els = {
   tagFields: document.getElementById('tagFields'),
   tagCategory: document.getElementById('tagCategory'),
   tagCategoryOptions: document.getElementById('tagCategoryOptions'),
+  tagNickname: document.getElementById('tagNickname'),
   tagColor: document.getElementById('tagColor'),
   tagStyleGroup: document.getElementById('tagStyleGroup'),
   tagSeason: document.getElementById('tagSeason'),
@@ -119,6 +120,7 @@ const els = {
   detailForm: document.getElementById('detailForm'),
   detailPhotoPreview: document.getElementById('detailPhotoPreview'),
   detailCategory: document.getElementById('detailCategory'),
+  detailNickname: document.getElementById('detailNickname'),
   detailColor: document.getElementById('detailColor'),
   detailStyleGroup: document.getElementById('detailStyleGroup'),
   detailSeason: document.getElementById('detailSeason'),
@@ -213,6 +215,7 @@ function resetModal() {
   els.tagFields.classList.add('hidden');
   els.saveItemBtn.disabled = true;
   els.tagCategory.value = '';
+  els.tagNickname.value = '';
   els.tagColor.value = '';
   setCheckedStyles([]);
   els.tagSeason.value = '';
@@ -308,6 +311,7 @@ els.addItemForm.addEventListener('submit', async (e) => {
 
   try {
     const category = els.tagCategory.value.trim();
+    const nickname = els.tagNickname.value.trim();
     const color = els.tagColor.value.trim();
     const styles = getCheckedStyles();
     const styleText = styles.join(', ');
@@ -329,10 +333,11 @@ els.addItemForm.addEventListener('submit', async (e) => {
     const lines = [
       `### ${color} ${category.replace(/s$/, '')}`,
       `![[${imagePath}]]`,
-      `- color: ${color}`,
-      `- style: ${styleText}`,
-      `- season: ${season}`,
     ];
+    if (nickname) lines.push(`- nickname: ${nickname}`);
+    lines.push(`- color: ${color}`);
+    lines.push(`- style: ${styleText}`);
+    lines.push(`- season: ${season}`);
     if (brand) lines.push(`- brand: ${brand}`);
     if (material) lines.push(`- material: ${material}`);
     if (size) lines.push(`- size: ${size}`);
@@ -388,6 +393,7 @@ function filterItemsBySearch(items) {
       item.material,
       item.size,
       item.notes,
+      item.nickname,
     ]
       .filter(Boolean)
       .join(' ')
@@ -638,6 +644,7 @@ function parseCategoryMarkdown(content) {
     const purchasedMatch = block.match(/- purchased: (.+)/);
     const priceMatch = block.match(/- price: (.+)/);
     const notesMatch = block.match(/- notes: (.+)/);
+    const nicknameMatch = block.match(/- nickname: (.+)/);
     return {
       index,
       raw: block,
@@ -654,6 +661,7 @@ function parseCategoryMarkdown(content) {
       purchased: purchasedMatch ? purchasedMatch[1].trim() : '',
       price: priceMatch ? priceMatch[1].trim() : '',
       notes: notesMatch ? notesMatch[1].trim() : '',
+      nickname: nicknameMatch ? nicknameMatch[1].trim() : '',
     };
   });
 }
@@ -666,11 +674,15 @@ function renderGarmentCard(item, category) {
   const wornBadge = showBadges && item.worn > 0
     ? `<span class="garment-worn-badge">worn ${item.worn}×</span>`
     : '';
+  const nicknameLine = item.nickname
+    ? `<div class="garment-nickname">"${item.nickname}"</div>`
+    : '';
   return `
     <div class="garment-card" data-category="${category}" data-index="${item.index}">
       ${imgTag}
       ${wornBadge}
       <div class="garment-meta">
+        ${nicknameLine}
         <div class="garment-color">${item.color}</div>
         <div class="garment-style">${item.style}</div>
       </div>
@@ -705,6 +717,7 @@ async function openDetailModal(category, index) {
   detailCurrentIndex = index;
 
   els.detailCategory.value = category;
+  els.detailNickname.value = item.nickname || '';
   els.detailColor.value = item.color;
   setDetailCheckedStyles(item.style);
   els.detailSeason.value = item.season;
@@ -790,6 +803,7 @@ els.detailForm.addEventListener('submit', async (e) => {
 
   try {
     const color = els.detailColor.value.trim();
+    const nickname = els.detailNickname.value.trim();
     const styles = getDetailCheckedStyles();
     const styleText = styles.join(', ');
     const season = els.detailSeason.value.trim();
@@ -804,6 +818,7 @@ els.detailForm.addEventListener('submit', async (e) => {
       `${color} ${detailCurrentCategory.replace(/s$/, '')}`,
     ];
     if (item.image) lines.push(`![[${item.image}]]`);
+    if (nickname) lines.push(`- nickname: ${nickname}`);
     lines.push(`- color: ${color}`);
     lines.push(`- style: ${styleText}`);
     lines.push(`- season: ${season}`);
@@ -873,10 +888,11 @@ function findMatchingClosetItem(category, description) {
 
 async function renderOutfitPhotos(outfit) {
   const photoHtml = outfit.items
-    .map((i) => {
+    .map((i, idx) => {
       const match = findMatchingClosetItem(i.category, i.description);
       if (!match || !match.image) return '';
-      return `<div class="outfit-photo-item" data-image-path="${match.image}">
+      const clickAttrs = `data-outfit-cat="${i.category}" data-outfit-idx="${match.index}"`;
+      return `<div class="outfit-photo-item" ${clickAttrs} data-image-path="${match.image}">
         <img class="outfit-photo" data-image-path="${match.image}" alt="${i.description}">
         <div class="outfit-photo-label">${i.category}</div>
       </div>`;
@@ -918,7 +934,16 @@ els.suggestBtn.addEventListener('click', async () => {
 
     if (showText) {
       const listEl = els.outfitResult.querySelector('ul');
-      listEl.innerHTML = outfit.items.map((i) => `<li><strong>${i.category}:</strong> ${i.description}</li>`).join('');
+      listEl.innerHTML = outfit.items
+        .map((i) => {
+          const match = findMatchingClosetItem(i.category, i.description);
+          const nickname = match && match.nickname ? ` <em class="outfit-nickname">"${match.nickname}"</em>` : '';
+          if (match) {
+            return `<li class="outfit-item-clickable" data-outfit-cat="${i.category}" data-outfit-idx="${match.index}"><strong>${i.category}:</strong> ${i.description}${nickname}</li>`;
+          }
+          return `<li><strong>${i.category}:</strong> ${i.description}</li>`;
+        })
+        .join('');
     }
     const reasoningP = document.createElement('p');
     reasoningP.className = 'garment-style';
@@ -941,6 +966,15 @@ els.suggestBtn.addEventListener('click', async () => {
       const path = imgEl.getAttribute('data-image-path');
       Vault.loadImageURL(path).then((url) => {
         if (url) imgEl.src = url;
+      });
+    });
+
+    // Wire clicks on outfit photos and list items to open the matched item's profile
+    els.outfitResult.querySelectorAll('[data-outfit-cat][data-outfit-idx]').forEach((el) => {
+      el.addEventListener('click', () => {
+        const cat = el.getAttribute('data-outfit-cat');
+        const idx = parseInt(el.getAttribute('data-outfit-idx'), 10);
+        if (!isNaN(idx)) openDetailModal(cat, idx);
       });
     });
   } catch (err) {
