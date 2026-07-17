@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Roboto+Slab:wght@400;500;700&family=Frank+Ruhl+Libre:wght@400;500;700&family=Cinzel:wght@500;700;900&family=IM+Fell+English:ital@0;1&display=swap');
 
 :root {
   --canvas: #EDE7DD;
@@ -620,4 +620,436 @@ textarea.picker-input {
 
 .garment-card:active {
   transform: scale(0.97);
+}
+
+/* ============================================================
+   THEME: WOODS
+   Deep forest greens, warm bark browns, cream. Serif type feel.
+   Softer edges, lived-in and organic.
+   ============================================================ */
+
+[data-theme="woods"] {
+  --canvas: #E8E1D0;
+  --canvas-raised: #F1EBDB;
+  --thread: #2A2318;
+  --thread-soft: #5C4E38;
+  --denim: #3B5B3F;         /* mossy forest green as primary accent */
+  --denim-dark: #26402A;
+  --rust: #9A5A2C;          /* warm bark brown as secondary */
+  --rust-soft: #C48451;
+  --line: #B8A886;
+
+  --font-display: 'Frank Ruhl Libre', serif;
+  --font-body: 'Frank Ruhl Libre', 'Archivo', serif;
+  --font-mono: 'Roboto Slab', 'JetBrains Mono', serif;
+
+  --radius: 5px;
+}
+
+[data-theme="woods"] body {
+  background:
+    var(--canvas)
+    repeating-linear-gradient(
+      92deg,
+      rgba(90,60,30,0.03) 0px,
+      rgba(90,60,30,0.03) 1px,
+      transparent 1px,
+      transparent 6px
+    );
+}
+
+[data-theme="woods"] .site-header {
+  border-bottom-width: 3px;
+  border-bottom-style: double;
+}
+
+[data-theme="woods"] .wordmark-main {
+  letter-spacing: 3px;
+  font-weight: 700;
+  font-family: 'Frank Ruhl Libre', serif;
+}
+
+[data-theme="woods"] .wordmark-sub {
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0.5px;
+}
+
+/* Buttons: rounder, more like carved wooden tags */
+[data-theme="woods"] .btn-tag {
+  border-radius: 999px;
+  padding: 9px 18px 9px 26px;
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+  font-size: 11px;
+  border-width: 2px;
+}
+
+[data-theme="woods"] .btn-tag::before {
+  width: 6px;
+  height: 6px;
+  left: 11px;
+  border-width: 2px;
+  background: var(--rust-soft);
+}
+
+[data-theme="woods"] .btn-tag--accent::before {
+  background: var(--rust);
+}
+
+/* Garment card: less crisp, more like a bark shingle */
+[data-theme="woods"] .garment-card {
+  border-radius: 8px 8px 3px 3px;
+  border-width: 2px;
+  box-shadow: 0 2px 0 rgba(60,45,25,0.15);
+}
+
+[data-theme="woods"] .garment-card::before {
+  background: var(--rust-soft);
+  border-color: var(--thread);
+  border-width: 2px;
+}
+
+[data-theme="woods"] .garment-photo {
+  border-bottom-style: solid;
+  border-bottom-color: var(--line);
+}
+
+[data-theme="woods"] .rail-title {
+  font-family: 'Frank Ruhl Libre', serif;
+  text-transform: none;
+  letter-spacing: 1px;
+  font-weight: 700;
+  font-size: 22px;
+  border-bottom: 1.5px solid var(--line);
+  padding-bottom: 4px;
+}
+
+[data-theme="woods"] .rail-count {
+  font-style: italic;
+  font-family: 'Frank Ruhl Libre', serif;
+}
+
+[data-theme="woods"] .outfit-picker,
+[data-theme="woods"] .closet-insights .insight-card {
+  border-width: 2px;
+  border-radius: 6px;
+}
+
+[data-theme="woods"] .picker-label,
+[data-theme="woods"] .modal-label {
+  font-family: 'Roboto Slab', serif;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+}
+
+[data-theme="woods"] .tag-modal-title {
+  font-family: 'Frank Ruhl Libre', serif;
+  text-transform: none;
+  letter-spacing: 1px;
+}
+
+[data-theme="woods"] .week-day-card {
+  border-radius: 6px;
+  border-width: 2px;
+}
+
+/* ============================================================
+   THEME: ICELAND
+   Cold blue-blacks, bone white, pale gold. Runic display.
+   Sharp geometric borders, carved-stone feel, etched details.
+   ============================================================ */
+
+[data-theme="iceland"] {
+  --canvas: #E8ECEE;
+  --canvas-raised: #F4F6F7;
+  --thread: #1A2530;
+  --thread-soft: #4A5A68;
+  --denim: #1F3A55;         /* deep fjord blue */
+  --denim-dark: #0F2438;
+  --rust: #A38430;          /* pale gold rune-glow */
+  --rust-soft: #C4A855;
+  --line: #A8B4BE;
+
+  --font-display: 'Cinzel', serif;
+  --font-body: 'IM Fell English', serif;
+  --font-mono: 'Cinzel', serif;
+
+  --radius: 0px;            /* sharp everything */
+}
+
+[data-theme="iceland"] body {
+  background:
+    var(--canvas)
+    linear-gradient(180deg, #DFE4E7 0%, var(--canvas) 40%);
+}
+
+/* Header: heavy carved feel */
+[data-theme="iceland"] .site-header {
+  border-bottom: 4px double var(--thread);
+  padding: 28px 32px;
+}
+
+[data-theme="iceland"] .wordmark-main {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  letter-spacing: 8px;
+  font-size: 26px;
+}
+
+[data-theme="iceland"] .wordmark-sub {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  letter-spacing: 2px;
+  font-size: 12px;
+  text-transform: none;
+  color: var(--rust);
+}
+
+/* Buttons: rune-carved stone tablets — sharp corners, chiseled feel */
+[data-theme="iceland"] .btn-tag {
+  border-radius: 0;
+  border-width: 2px;
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-size: 10px;
+  padding: 10px 18px 10px 26px;
+  background:
+    linear-gradient(135deg, var(--canvas-raised) 0%, #E2E7EA 100%);
+  position: relative;
+}
+
+[data-theme="iceland"] .btn-tag::before {
+  /* Turn the little circle into a rune-mark: a diamond */
+  width: 8px;
+  height: 8px;
+  border-radius: 0;
+  transform: translateY(-50%) rotate(45deg);
+  border-width: 2px;
+  background: var(--rust);
+}
+
+[data-theme="iceland"] .btn-tag--accent {
+  background: linear-gradient(135deg, var(--denim) 0%, var(--denim-dark) 100%);
+  color: var(--canvas-raised);
+  border-color: var(--thread);
+}
+
+[data-theme="iceland"] .btn-tag--accent::before {
+  background: var(--rust-soft);
+  border-color: var(--rust-soft);
+}
+
+[data-theme="iceland"] .btn-tag--danger {
+  background: linear-gradient(135deg, #fff 0%, #f0e6e0 100%);
+}
+
+/* Section headers: carved runic titles */
+[data-theme="iceland"] .rail-title,
+[data-theme="iceland"] .tag-modal-title {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  font-size: 18px;
+  border-bottom: 2px solid var(--thread);
+  border-top: 2px solid var(--thread);
+  padding: 6px 0;
+  margin-bottom: 12px;
+  position: relative;
+  text-align: center;
+}
+
+/* Add a small runic dagger ornament flanking section titles */
+[data-theme="iceland"] .rail-title::before,
+[data-theme="iceland"] .rail-title::after {
+  content: "◆";
+  color: var(--rust);
+  margin: 0 12px;
+  font-size: 10px;
+  vertical-align: middle;
+}
+
+[data-theme="iceland"] .rail-count {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  color: var(--thread-soft);
+}
+
+/* Garment cards: runestone tablets */
+[data-theme="iceland"] .garment-card {
+  border-radius: 0;
+  border-width: 2px;
+  background: linear-gradient(180deg, var(--canvas-raised) 0%, #E2E7EA 100%);
+  padding-top: 18px;
+  box-shadow: inset 0 0 0 1px rgba(200, 210, 220, 0.5);
+  position: relative;
+}
+
+/* Replace the swing-tag hole with a runic diamond etching */
+[data-theme="iceland"] .garment-card::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: 0;
+  transform: translateX(-50%) rotate(45deg);
+  top: -8px;
+  border-width: 2px;
+  background: var(--canvas);
+}
+
+/* Add engraved-look side notches on cards using pseudo-decoration */
+[data-theme="iceland"] .garment-card::after {
+  content: "";
+  position: absolute;
+  bottom: 40px;
+  left: 4px;
+  right: 4px;
+  height: 1px;
+  border-top: 1px dashed var(--rust-soft);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+[data-theme="iceland"] .garment-photo {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: var(--thread);
+}
+
+[data-theme="iceland"] .garment-color {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--rust);
+  text-transform: uppercase;
+}
+
+[data-theme="iceland"] .garment-style {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 12px;
+}
+
+[data-theme="iceland"] .garment-worn-badge {
+  border-radius: 0;
+  background: var(--thread);
+  font-family: 'Cinzel', serif;
+  letter-spacing: 1px;
+  font-weight: 700;
+  border: 1px solid var(--rust);
+}
+
+/* Outfit picker and inputs */
+[data-theme="iceland"] .outfit-picker,
+[data-theme="iceland"] .closet-insights .insight-card,
+[data-theme="iceland"] .week-day-card,
+[data-theme="iceland"] .outfit-result,
+[data-theme="iceland"] .picker-input,
+[data-theme="iceland"] .tag-modal,
+[data-theme="iceland"] .style-checkbox {
+  border-radius: 0;
+  border-width: 2px;
+}
+
+[data-theme="iceland"] .picker-label,
+[data-theme="iceland"] .modal-label {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--thread);
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+[data-theme="iceland"] .picker-input {
+  background: var(--canvas-raised);
+  border-color: var(--thread);
+}
+
+/* Insight cards: carved runic stones */
+[data-theme="iceland"] .insight-value {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  color: var(--denim);
+  letter-spacing: 2px;
+}
+
+[data-theme="iceland"] .insight-label {
+  font-family: 'Cinzel', serif;
+  color: var(--rust);
+  letter-spacing: 2px;
+}
+
+[data-theme="iceland"] .insight-sub {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+}
+
+/* Week planner cards */
+[data-theme="iceland"] .week-day-card {
+  background: linear-gradient(180deg, var(--canvas-raised) 0%, #E2E7EA 100%);
+}
+
+[data-theme="iceland"] .week-day-label {
+  font-family: 'Cinzel', serif;
+  color: var(--rust);
+  letter-spacing: 3px;
+  font-weight: 700;
+}
+
+[data-theme="iceland"] .week-day-date {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: 20px;
+}
+
+[data-theme="iceland"] .week-day-summary {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+}
+
+[data-theme="iceland"] .week-day-card.has-plan {
+  background: linear-gradient(180deg, #E4EDF4 0%, #D1DEE9 100%);
+  border-color: var(--denim);
+}
+
+/* Style checkboxes: rune tablets */
+[data-theme="iceland"] .style-checkbox {
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 10px;
+  padding: 7px 11px;
+}
+
+[data-theme="iceland"] .style-checkbox:has(input:checked) {
+  background: var(--denim);
+  color: var(--canvas-raised);
+  border-color: var(--rust);
+}
+
+/* Detail stats row */
+[data-theme="iceland"] .detail-stat-value {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  color: var(--denim);
+}
+
+[data-theme="iceland"] .detail-stat-label {
+  font-family: 'Cinzel', serif;
+  color: var(--rust);
+}
+
+/* Modal titles get a heavy etched treatment */
+[data-theme="iceland"] .tag-modal-title {
+  border-bottom: 3px double var(--thread);
+  border-top: none;
+  padding-top: 0;
+  margin-bottom: 20px;
 }
