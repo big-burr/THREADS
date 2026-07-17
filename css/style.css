@@ -677,19 +677,27 @@ textarea.picker-input {
   --radius: 5px;
 }
 
+[data-theme="woods"] html,
+[data-theme="woods"] body {
+  min-height: 100%;
+}
+
 [data-theme="woods"] body {
   background:
     url('../assets/woods-bg.svg') var(--canvas);
   background-size: 400px 400px;
   background-repeat: repeat;
+  background-attachment: fixed;
 }
 
-/* Content panels get their own opaque background so text is legible over the pattern */
+/* Content panel: sits over the pattern, semi-opaque parchment feel */
 [data-theme="woods"] #app {
-  background: rgba(232, 225, 208, 0.85);
+  background: rgba(232, 225, 208, 0.88);
   backdrop-filter: blur(1px);
-  border-left: 1px solid rgba(60, 45, 25, 0.15);
-  border-right: 1px solid rgba(60, 45, 25, 0.15);
+  border-left: 2px solid rgba(60, 45, 25, 0.2);
+  border-right: 2px solid rgba(60, 45, 25, 0.2);
+  padding-left: 28px;
+  padding-right: 28px;
 }
 
 [data-theme="woods"] .site-header {
@@ -814,20 +822,28 @@ textarea.picker-input {
   --radius: 0px;            /* sharp everything */
 }
 
+[data-theme="iceland"] html,
+[data-theme="iceland"] body {
+  min-height: 100%;
+}
+
 [data-theme="iceland"] body {
   background:
     url('../assets/iceland-bg.svg') var(--canvas);
   background-size: 240px 240px;
   background-repeat: repeat;
+  background-attachment: fixed;
 }
 
 [data-theme="iceland"] #app {
-  background: rgba(232, 236, 238, 0.88);
+  background: rgba(232, 236, 238, 0.90);
   border-left: 2px solid var(--thread);
   border-right: 2px solid var(--thread);
+  padding-left: 28px;
+  padding-right: 28px;
   box-shadow:
-    inset 3px 0 0 rgba(31, 58, 85, 0.15),
-    inset -3px 0 0 rgba(31, 58, 85, 0.15);
+    inset 4px 0 0 rgba(31, 58, 85, 0.15),
+    inset -4px 0 0 rgba(31, 58, 85, 0.15);
 }
 
 /* Header: heavy carved feel */
@@ -1096,4 +1112,236 @@ textarea.picker-input {
   border-top: none;
   padding-top: 0;
   margin-bottom: 20px;
+}
+
+/* ============================================================
+   WOODS: signature box flair
+   Cards feel like weathered wooden shingles / bark tags.
+   ============================================================ */
+
+[data-theme="woods"] .garment-card {
+  background:
+    linear-gradient(180deg, var(--canvas-raised) 0%, #EBE3D0 100%);
+  box-shadow:
+    0 3px 0 rgba(60, 45, 25, 0.2),
+    inset 0 0 0 1px rgba(90, 60, 30, 0.08);
+}
+
+/* Add a small pine sprig ornament in the top-right corner of each card */
+[data-theme="woods"] .garment-card::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><g stroke='%233B5B3F' stroke-width='1.2' fill='none' stroke-linecap='round'><path d='M 6 20 L 18 4'/><path d='M 8 17 L 4 15'/><path d='M 10 14 L 5 11'/><path d='M 12 11 L 6 7'/><path d='M 14 8 L 9 4'/><path d='M 8 17 L 12 18'/><path d='M 10 14 L 15 13'/><path d='M 12 11 L 17 8'/><path d='M 14 8 L 18 7'/></g></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Insight cards: leather journal patches */
+[data-theme="woods"] .insight-card {
+  background:
+    linear-gradient(180deg, var(--canvas-raised) 0%, #E8DFC8 100%);
+  box-shadow:
+    0 2px 0 rgba(60, 45, 25, 0.15),
+    inset 0 0 0 1px rgba(90, 60, 30, 0.1);
+  border-radius: 8px 8px 3px 3px;
+  position: relative;
+}
+
+/* Corner stitch marks on insight cards */
+[data-theme="woods"] .insight-card::before,
+[data-theme="woods"] .insight-card::after {
+  content: "×";
+  position: absolute;
+  top: 6px;
+  color: var(--rust);
+  font-size: 12px;
+  opacity: 0.55;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+[data-theme="woods"] .insight-card::before { left: 6px; }
+[data-theme="woods"] .insight-card::after { right: 6px; }
+
+/* Week planner day cards: field-guide entries */
+[data-theme="woods"] .week-day-card {
+  background:
+    linear-gradient(180deg, var(--canvas-raised) 0%, #E8DFC8 100%);
+  box-shadow:
+    0 2px 0 rgba(60, 45, 25, 0.15),
+    inset 0 0 0 1px rgba(90, 60, 30, 0.08);
+  border-radius: 8px 8px 3px 3px;
+}
+
+[data-theme="woods"] .week-day-card.has-plan {
+  background:
+    linear-gradient(180deg, #E4E8D6 0%, #D6DCC0 100%);
+}
+
+/* Rail titles get a subtle pine-branch underline (implemented with the existing border) */
+[data-theme="woods"] .rail-title {
+  position: relative;
+}
+
+[data-theme="woods"] .rail-title::after {
+  content: "❦";
+  color: var(--denim);
+  margin-left: 12px;
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+/* Outfit picker: journal-page feel */
+[data-theme="woods"] .outfit-picker,
+[data-theme="woods"] .outfit-result {
+  background:
+    linear-gradient(180deg, var(--canvas-raised) 0%, #E8DFC8 100%);
+  box-shadow:
+    0 3px 0 rgba(60, 45, 25, 0.12),
+    inset 0 0 0 1px rgba(90, 60, 30, 0.1);
+  border-radius: 6px 6px 3px 3px;
+}
+
+/* ============================================================
+   ICELAND: signature box flair
+   Cards feel like carved runestones with corner rune marks.
+   ============================================================ */
+
+[data-theme="iceland"] .garment-card {
+  background:
+    linear-gradient(160deg, #F4F6F7 0%, #DFE6EA 100%);
+  box-shadow:
+    0 3px 0 rgba(26, 37, 48, 0.3),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.6),
+    inset -1px -1px 0 rgba(26, 37, 48, 0.2);
+}
+
+/* Corner rune marks on each garment card — four small diamond etchings */
+[data-theme="iceland"] .garment-card::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  pointer-events: none;
+  background-image:
+    /* top-left rune */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M5 1 L9 5 L5 9 L1 5 Z' fill='none' stroke='%23A38430' stroke-width='1'/></svg>"),
+    /* top-right rune */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M5 1 L9 5 L5 9 L1 5 Z' fill='none' stroke='%23A38430' stroke-width='1'/></svg>"),
+    /* bottom-left rune */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M5 1 L9 5 L5 9 L1 5 Z' fill='none' stroke='%23A38430' stroke-width='1'/></svg>"),
+    /* bottom-right rune */
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M5 1 L9 5 L5 9 L1 5 Z' fill='none' stroke='%23A38430' stroke-width='1'/></svg>");
+  background-repeat: no-repeat;
+  background-position:
+    left top,
+    right top,
+    left bottom,
+    right bottom;
+  background-size: 8px 8px, 8px 8px, 8px 8px, 8px 8px;
+  opacity: 0.7;
+}
+
+/* Insight cards: standing rune-stones */
+[data-theme="iceland"] .insight-card {
+  background:
+    linear-gradient(180deg, #F4F6F7 0%, #D9DFE3 100%);
+  box-shadow:
+    0 3px 0 rgba(26, 37, 48, 0.3),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.6),
+    inset -1px -1px 0 rgba(26, 37, 48, 0.2);
+  position: relative;
+}
+
+/* Top and bottom rune-mark for insight cards */
+[data-theme="iceland"] .insight-card::before,
+[data-theme="iceland"] .insight-card::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><path d='M5 1 L9 5 L5 9 L1 5 Z' fill='%231F3A55' stroke='%23A38430' stroke-width='0.7'/></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.65;
+}
+
+[data-theme="iceland"] .insight-card::before { top: 4px; }
+[data-theme="iceland"] .insight-card::after { bottom: 4px; }
+
+/* Week planner day cards: individual runestones for each day */
+[data-theme="iceland"] .week-day-card {
+  background:
+    linear-gradient(180deg, #F4F6F7 0%, #D9DFE3 100%);
+  box-shadow:
+    0 3px 0 rgba(26, 37, 48, 0.3),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.6),
+    inset -1px -1px 0 rgba(26, 37, 48, 0.2);
+}
+
+[data-theme="iceland"] .week-day-card.has-plan {
+  background:
+    linear-gradient(180deg, #E4EDF4 0%, #C4D3DE 100%);
+  border-color: var(--denim);
+  box-shadow:
+    0 3px 0 rgba(26, 37, 48, 0.4),
+    inset 0 0 0 1px var(--rust),
+    inset 2px 2px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Outfit picker: engraved ceremonial stone */
+[data-theme="iceland"] .outfit-picker,
+[data-theme="iceland"] .outfit-result {
+  background:
+    linear-gradient(180deg, #F4F6F7 0%, #D9DFE3 100%);
+  box-shadow:
+    0 4px 0 rgba(26, 37, 48, 0.3),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.6);
+  position: relative;
+}
+
+/* Ornamental corner rune-marks on outfit picker */
+[data-theme="iceland"] .outfit-picker::before,
+[data-theme="iceland"] .outfit-picker::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  width: 12px;
+  height: 12px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'><path d='M6 1 L11 6 L6 11 L1 6 Z' fill='%231F3A55' stroke='%23A38430' stroke-width='1'/></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.7;
+}
+
+[data-theme="iceland"] .outfit-picker::before { left: 8px; }
+[data-theme="iceland"] .outfit-picker::after { right: 8px; }
+
+/* Category rail dividers between rows for both themes */
+[data-theme="woods"] .category-rail + .category-rail::before,
+[data-theme="iceland"] .category-rail + .category-rail::before {
+  content: "";
+  display: block;
+  height: 20px;
+  margin: -4px 0 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+[data-theme="woods"] .category-rail + .category-rail::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 20'><g stroke='%233B5B3F' stroke-width='1.2' fill='none' opacity='0.5' stroke-linecap='round'><path d='M 20 10 L 80 10'/><path d='M 120 10 L 180 10'/><path d='M 90 10 L 100 4'/><path d='M 90 10 L 100 16'/><path d='M 100 4 L 110 10'/><path d='M 100 16 L 110 10'/><circle cx='100' cy='10' r='2' fill='%233B5B3F'/></g></svg>");
+  height: 24px;
+}
+
+[data-theme="iceland"] .category-rail + .category-rail::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 20'><g stroke='%231F3A55' stroke-width='1' fill='none' opacity='0.5'><line x1='10' y1='10' x2='80' y2='10'/><line x1='120' y1='10' x2='190' y2='10'/><path d='M100 3 L107 10 L100 17 L93 10 Z' fill='%231F3A55' stroke='%23A38430' stroke-width='1'/></g></svg>");
+  height: 22px;
 }
