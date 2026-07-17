@@ -19,7 +19,7 @@
   <header class="site-header">
     <div class="wordmark">
       <span class="wordmark-main">THREADS</span>
-      <span class="wordmark-sub">garment index · outfit picks</span>
+      <span class="wordmark-sub" id="wordmarkSub">garment index · outfit picks</span>
     </div>
     <div class="header-actions">
       <button id="connectVaultBtn" class="btn-tag">connect vault</button>
@@ -275,6 +275,13 @@
   <dialog id="settingsModal" class="tag-modal">
     <form id="settingsForm" class="tag-modal-form">
       <h2 class="tag-modal-title">settings</h2>
+
+      <label class="modal-label">theme</label>
+      <select id="settingTheme" class="picker-input">
+        <option value="clean" selected>clean (garment tag)</option>
+        <option value="woods">woods (forest lodge)</option>
+        <option value="iceland">iceland (runic norse)</option>
+      </select>
 
       <label class="modal-label">outfit results display</label>
       <select id="settingResultDisplay" class="picker-input">
