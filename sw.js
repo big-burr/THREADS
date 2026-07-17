@@ -1,5 +1,5 @@
 // THREADS service worker — bump CACHE_VERSION on every deploy
-const CACHE_VERSION = 'threads-v18';
+const CACHE_VERSION = 'threads-v19';
 const ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,10 @@ const ASSETS = [
   './icons/icon-512.png',
   './assets/woods-bg.svg',
   './assets/iceland-bg.svg',
+  './assets/woods-header.svg',
+  './assets/iceland-header.svg',
+  './assets/woods-closet.svg',
+  './assets/iceland-closet.svg',
 ];
 
 self.addEventListener('install', (event) => {
