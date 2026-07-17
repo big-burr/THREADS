@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500">
+  <defs>
+    <pattern id="forest" x="0" y="0" width="500" height="500" patternUnits="userSpaceOnUse">
+      <!-- Deeper mossy base -->
+      <rect width="500" height="500" fill="#DDD4BF"/>
+
+      <!-- Background moss/lichen suggestions in mottled greens -->
+      <g fill="#3B5B3F" opacity="0.08">
+        <circle cx="80" cy="120" r="45"/>
+        <circle cx="380" cy="200" r="60"/>
+        <circle cx="150" cy="380" r="50"/>
+        <circle cx="420" cy="420" r="40"/>
+        <circle cx="250" cy="60" r="35"/>
+      </g>
+      <g fill="#26402A" opacity="0.06">
+        <circle cx="200" cy="200" r="55"/>
+        <circle cx="450" cy="80" r="45"/>
+        <circle cx="60" cy="350" r="50"/>
+        <circle cx="330" cy="330" r="40"/>
+      </g>
+
+      <!-- LAYER 1: Large sweeping pine branches (mid-tone) -->
+      <g stroke="#26402A" stroke-width="2" fill="none" opacity="0.35" stroke-linecap="round">
+        <!-- Branch top-left, sweeping right -->
+        <path d="M 10 80 Q 150 60 300 100"/>
+        <g stroke-width="1.5">
+          <path d="M 50 75 L 40 60"/><path d="M 50 75 L 50 58"/><path d="M 50 75 L 60 60"/>
+          <path d="M 80 72 L 70 55"/><path d="M 80 72 L 80 55"/><path d="M 80 72 L 90 55"/>
+          <path d="M 110 72 L 100 55"/><path d="M 110 72 L 110 55"/><path d="M 110 72 L 120 55"/>
+          <path d="M 140 72 L 130 55"/><path d="M 140 72 L 140 55"/><path d="M 140 72 L 150 55"/>
+          <path d="M 170 74 L 160 57"/><path d="M 170 74 L 170 55"/><path d="M 170 74 L 180 57"/>
+          <path d="M 200 78 L 190 62"/><path d="M 200 78 L 200 58"/><path d="M 200 78 L 210 62"/>
+          <path d="M 230 82 L 220 65"/><path d="M 230 82 L 230 62"/><path d="M 230 82 L 240 65"/>
+          <path d="M 260 88 L 250 70"/><path d="M 260 88 L 260 68"/><path d="M 260 88 L 270 70"/>
+          <path d="M 290 96 L 280 78"/><path d="M 290 96 L 290 74"/><path d="M 290 96 L 300 78"/>
+          <!-- underside -->
+          <path d="M 50 75 L 40 90"/><path d="M 50 75 L 50 92"/><path d="M 50 75 L 60 90"/>
+          <path d="M 80 72 L 70 87"/><path d="M 80 72 L 80 89"/><path d="M 80 72 L 90 87"/>
+          <path d="M 110 72 L 100 87"/><path d="M 110 72 L 110 89"/><path d="M 110 72 L 120 87"/>
+          <path d="M 140 72 L 130 87"/><path d="M 140 72 L 140 89"/><path d="M 140 72 L 150 87"/>
+          <path d="M 170 74 L 160 89"/><path d="M 170 74 L 170 91"/><path d="M 170 74 L 180 89"/>
+          <path d="M 200 78 L 190 93"/><path d="M 200 78 L 200 95"/><path d="M 200 78 L 210 93"/>
+          <path d="M 230 82 L 220 97"/><path d="M 230 82 L 230 99"/><path d="M 230 82 L 240 97"/>
+          <path d="M 260 88 L 250 103"/><path d="M 260 88 L 260 105"/><path d="M 260 88 L 270 103"/>
+        </g>
+      </g>
+
+      <!-- LAYER 2: Diagonal branch mid-right (lighter, further back) -->
+      <g stroke="#3B5B3F" stroke-width="1.8" fill="none" opacity="0.28" stroke-linecap="round">
+        <path d="M 480 180 Q 400 250 320 340"/>
+        <g stroke-width="1.3">
+          <path d="M 470 190 L 480 188"/><path d="M 470 190 L 484 184"/><path d="M 470 190 L 486 178"/>
+          <path d="M 450 210 L 462 208"/><path d="M 450 210 L 468 202"/><path d="M 450 210 L 472 194"/>
+          <path d="M 430 230 L 442 228"/><path d="M 430 230 L 448 222"/><path d="M 430 230 L 452 214"/>
+          <path d="M 410 250 L 422 248"/><path d="M 410 250 L 428 242"/><path d="M 410 250 L 432 234"/>
+          <path d="M 390 275 L 402 273"/><path d="M 390 275 L 408 267"/><path d="M 390 275 L 412 259"/>
+          <path d="M 370 300 L 382 298"/><path d="M 370 300 L 388 292"/><path d="M 370 300 L 392 284"/>
+          <path d="M 350 325 L 362 323"/><path d="M 350 325 L 368 317"/><path d="M 350 325 L 372 309"/>
+          <!-- other side -->
+          <path d="M 470 190 L 460 192"/><path d="M 470 190 L 456 200"/>
+          <path d="M 450 210 L 440 212"/><path d="M 450 210 L 436 220"/>
+          <path d="M 430 230 L 420 232"/><path d="M 430 230 L 416 240"/>
+          <path d="M 410 250 L 400 252"/><path d="M 410 250 L 396 260"/>
+          <path d="M 390 275 L 380 277"/><path d="M 390 275 L 376 285"/>
+          <path d="M 370 300 L 360 302"/><path d="M 370 300 L 356 310"/>
+        </g>
+      </g>
+
+      <!-- LAYER 3: Horizontal branch at bottom -->
+      <g stroke="#26402A" stroke-width="2" fill="none" opacity="0.32" stroke-linecap="round">
+        <path d="M 40 440 Q 200 455 380 440"/>
+        <g stroke-width="1.5">
+          <path d="M 70 440 L 60 425"/><path d="M 70 440 L 70 423"/><path d="M 70 440 L 80 425"/>
+          <path d="M 100 442 L 90 427"/><path d="M 100 442 L 100 425"/><path d="M 100 442 L 110 427"/>
+          <path d="M 130 444 L 120 429"/><path d="M 130 444 L 130 427"/><path d="M 130 444 L 140 429"/>
+          <path d="M 160 445 L 150 430"/><path d="M 160 445 L 160 428"/><path d="M 160 445 L 170 430"/>
+          <path d="M 190 446 L 180 431"/><path d="M 190 446 L 190 429"/><path d="M 190 446 L 200 431"/>
+          <path d="M 220 446 L 210 431"/><path d="M 220 446 L 220 429"/><path d="M 220 446 L 230 431"/>
+          <path d="M 250 445 L 240 430"/><path d="M 250 445 L 250 428"/><path d="M 250 445 L 260 430"/>
+          <path d="M 280 444 L 270 429"/><path d="M 280 444 L 280 427"/><path d="M 280 444 L 290 429"/>
+          <path d="M 310 442 L 300 427"/><path d="M 310 442 L 310 425"/><path d="M 310 442 L 320 427"/>
+          <path d="M 340 441 L 330 426"/><path d="M 340 441 L 340 424"/><path d="M 340 441 L 350 426"/>
+          <!-- below -->
+          <path d="M 70 440 L 60 455"/><path d="M 70 440 L 70 457"/><path d="M 70 440 L 80 455"/>
+          <path d="M 100 442 L 90 457"/><path d="M 100 442 L 100 459"/><path d="M 100 442 L 110 457"/>
+          <path d="M 130 444 L 120 459"/><path d="M 130 444 L 130 461"/><path d="M 130 444 L 140 459"/>
+          <path d="M 160 445 L 150 460"/><path d="M 160 445 L 160 462"/><path d="M 160 445 L 170 460"/>
+          <path d="M 190 446 L 180 461"/><path d="M 190 446 L 190 463"/><path d="M 190 446 L 200 461"/>
+          <path d="M 220 446 L 210 461"/><path d="M 220 446 L 220 463"/><path d="M 220 446 L 230 461"/>
+          <path d="M 250 445 L 240 460"/><path d="M 250 445 L 250 462"/><path d="M 250 445 L 260 460"/>
+          <path d="M 280 444 L 270 459"/><path d="M 280 444 L 280 461"/><path d="M 280 444 L 290 459"/>
+        </g>
+      </g>
+
+      <!-- Pine cones scattered -->
+      <g fill="#26402A" opacity="0.4">
+        <ellipse cx="330" cy="150" rx="5" ry="8"/>
+        <ellipse cx="100" cy="280" rx="5" ry="8"/>
+        <ellipse cx="430" cy="380" rx="5" ry="8"/>
+        <ellipse cx="240" cy="200" rx="4" ry="7"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="500" height="500" fill="url(#forest)"/>
+</svg>

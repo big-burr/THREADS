@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="360" viewBox="0 0 360 360">
+  <defs>
+    <pattern id="monolith" x="0" y="0" width="360" height="360" patternUnits="userSpaceOnUse">
+      <!-- Slightly darker stone base for the closet zone -->
+      <rect width="360" height="360" fill="#D6DCE0"/>
+
+      <!-- Depth shadows suggesting carved-in runes -->
+      <g fill="#B8C0C6" opacity="0.5">
+        <rect x="30" y="20" width="60" height="80"/>
+        <rect x="140" y="40" width="70" height="80"/>
+        <rect x="260" y="20" width="60" height="80"/>
+        <rect x="30" y="140" width="70" height="80"/>
+        <rect x="150" y="160" width="60" height="80"/>
+        <rect x="260" y="140" width="70" height="80"/>
+        <rect x="30" y="260" width="60" height="80"/>
+        <rect x="140" y="280" width="70" height="80"/>
+        <rect x="260" y="260" width="60" height="80"/>
+      </g>
+
+      <!-- Row 1: large runes -->
+      <g stroke="#1A2530" stroke-width="2" fill="none" opacity="0.55" stroke-linecap="square">
+        <!-- Fehu (large) -->
+        <path d="M 45 30 L 45 90"/>
+        <path d="M 45 34 L 68 24"/>
+        <path d="M 45 50 L 63 42"/>
+
+        <!-- Ansuz -->
+        <path d="M 155 30 L 155 90"/>
+        <path d="M 155 36 L 178 32"/>
+        <path d="M 155 52 L 178 48"/>
+
+        <!-- Tiwaz -->
+        <path d="M 285 30 L 285 90"/>
+        <path d="M 270 42 L 285 30 L 300 42"/>
+      </g>
+
+      <!-- Row 2 -->
+      <g stroke="#1A2530" stroke-width="2" fill="none" opacity="0.5" stroke-linecap="square">
+        <!-- Berkano -->
+        <path d="M 45 150 L 45 210"/>
+        <path d="M 45 150 L 68 168 L 45 180"/>
+        <path d="M 45 180 L 68 198 L 45 210"/>
+
+        <!-- Mannaz -->
+        <path d="M 160 170 L 160 230"/>
+        <path d="M 190 170 L 190 230"/>
+        <path d="M 160 170 L 190 200"/>
+        <path d="M 190 170 L 160 200"/>
+
+        <!-- Othala (large diamond with feet) -->
+        <path d="M 290 155 L 315 180 L 290 205 L 265 180 Z"/>
+        <path d="M 275 205 L 260 230"/>
+        <path d="M 305 205 L 320 230"/>
+      </g>
+
+      <!-- Row 3 -->
+      <g stroke="#1A2530" stroke-width="2" fill="none" opacity="0.5" stroke-linecap="square">
+        <!-- Ehwaz -->
+        <path d="M 45 270 L 45 330"/>
+        <path d="M 75 270 L 75 330"/>
+        <path d="M 45 285 L 75 300"/>
+
+        <!-- Dagaz -->
+        <path d="M 155 290 L 155 340"/>
+        <path d="M 195 290 L 195 340"/>
+        <path d="M 155 290 L 195 340"/>
+        <path d="M 195 290 L 155 340"/>
+
+        <!-- Sowilo -->
+        <path d="M 315 270 L 285 285 L 315 300 L 285 315 L 315 330"/>
+      </g>
+
+      <!-- Runic separators between rows (etched horizontal lines) -->
+      <g stroke="#4A5A68" stroke-width="0.7" opacity="0.5">
+        <line x1="0" y1="110" x2="360" y2="110"/>
+        <line x1="0" y1="245" x2="360" y2="245"/>
+      </g>
+
+      <!-- Small pale gold rune-glow accents at intersection points -->
+      <g fill="#A38430" opacity="0.5">
+        <circle cx="180" cy="110" r="2.5"/>
+        <circle cx="180" cy="245" r="2.5"/>
+      </g>
+
+      <!-- Faint corner glyphs -->
+      <g stroke="#A38430" stroke-width="0.7" opacity="0.4" fill="none">
+        <path d="M 6 6 L 12 6 M 6 6 L 6 12"/>
+        <path d="M 354 6 L 348 6 M 354 6 L 354 12"/>
+        <path d="M 6 354 L 12 354 M 6 354 L 6 348"/>
+        <path d="M 354 354 L 348 354 M 354 354 L 354 348"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="360" height="360" fill="url(#monolith)"/>
+</svg>

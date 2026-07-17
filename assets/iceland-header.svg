@@ -1,0 +1,166 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="120" viewBox="0 0 800 120" preserveAspectRatio="xMidYMid slice">
+  <!-- Base stone color -->
+  <rect width="800" height="120" fill="#4A5A68"/>
+
+  <!-- Stone tonal gradient for depth -->
+  <defs>
+    <linearGradient id="stoneGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3A4B58"/>
+      <stop offset="0.5" stop-color="#4A5A68"/>
+      <stop offset="1" stop-color="#2A3B48"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="120" fill="url(#stoneGrad)"/>
+
+  <!-- Stone texture — random speckle and mineral inclusions -->
+  <g fill="#5A6A78" opacity="0.3">
+    <circle cx="60" cy="20" r="0.8"/><circle cx="140" cy="45" r="1"/><circle cx="220" cy="15" r="0.7"/>
+    <circle cx="300" cy="60" r="1.2"/><circle cx="380" cy="25" r="0.9"/><circle cx="460" cy="50" r="0.8"/>
+    <circle cx="540" cy="18" r="1"/><circle cx="620" cy="55" r="0.7"/><circle cx="700" cy="30" r="1.1"/>
+    <circle cx="100" cy="80" r="0.8"/><circle cx="180" cy="100" r="1"/><circle cx="260" cy="85" r="0.6"/>
+    <circle cx="340" cy="105" r="1.2"/><circle cx="420" cy="90" r="0.9"/><circle cx="500" cy="110" r="0.8"/>
+    <circle cx="580" cy="88" r="1"/><circle cx="660" cy="105" r="0.7"/><circle cx="740" cy="95" r="1.1"/>
+    <circle cx="20" cy="60" r="0.8"/><circle cx="780" cy="75" r="0.9"/>
+  </g>
+
+  <g fill="#2A3B48" opacity="0.5">
+    <circle cx="80" cy="35" r="0.6"/><circle cx="200" cy="70" r="0.7"/><circle cx="360" cy="40" r="0.8"/>
+    <circle cx="480" cy="75" r="0.6"/><circle cx="600" cy="35" r="0.7"/><circle cx="720" cy="70" r="0.6"/>
+    <circle cx="140" cy="95" r="0.8"/><circle cx="280" cy="105" r="0.6"/><circle cx="440" cy="20" r="0.7"/>
+    <circle cx="560" cy="105" r="0.6"/>
+  </g>
+
+  <!-- Horizontal chiseled bands framing the middle (inscription zone) -->
+  <line x1="0" y1="35" x2="800" y2="35" stroke="#1A2530" stroke-width="1.5" opacity="0.7"/>
+  <line x1="0" y1="37" x2="800" y2="37" stroke="#7A8A98" stroke-width="0.5" opacity="0.4"/>
+  <line x1="0" y1="83" x2="800" y2="83" stroke="#1A2530" stroke-width="1.5" opacity="0.7"/>
+  <line x1="0" y1="85" x2="800" y2="85" stroke="#7A8A98" stroke-width="0.5" opacity="0.4"/>
+
+  <!-- Runic inscription running across the middle (light rune outlines) -->
+  <g stroke="#B8A855" stroke-width="1.2" fill="none" opacity="0.5" stroke-linecap="square">
+    <!-- Fehu -->
+    <path d="M 30 50 L 30 70"/>
+    <path d="M 30 52 L 38 48"/>
+    <path d="M 30 58 L 36 54"/>
+
+    <!-- Uruz -->
+    <path d="M 55 50 L 55 70 L 63 55 L 63 70"/>
+
+    <!-- Thurisaz -->
+    <path d="M 80 50 L 80 70"/>
+    <path d="M 80 56 L 88 60 L 80 64"/>
+
+    <!-- Ansuz -->
+    <path d="M 105 50 L 105 70"/>
+    <path d="M 105 54 L 113 52"/>
+    <path d="M 105 60 L 113 58"/>
+
+    <!-- Raidho -->
+    <path d="M 130 50 L 130 70"/>
+    <path d="M 130 50 L 138 58 L 130 62"/>
+    <path d="M 130 62 L 138 70"/>
+
+    <!-- Kenaz -->
+    <path d="M 155 50 L 163 60 L 155 70"/>
+
+    <!-- Gebo -->
+    <path d="M 180 50 L 188 70"/>
+    <path d="M 188 50 L 180 70"/>
+
+    <!-- Wunjo -->
+    <path d="M 205 50 L 205 70"/>
+    <path d="M 205 50 L 213 55 L 205 60"/>
+
+    <!-- Hagalaz -->
+    <path d="M 230 50 L 230 70"/>
+    <path d="M 238 50 L 238 70"/>
+    <path d="M 230 55 L 238 65"/>
+
+    <!-- Nauthiz -->
+    <path d="M 255 50 L 255 70"/>
+    <path d="M 251 56 L 259 64"/>
+
+    <!-- Isa (single line) -->
+    <path d="M 280 50 L 280 70"/>
+
+    <!-- Jera -->
+    <path d="M 300 50 L 308 55 L 300 60 L 308 65 L 300 70"/>
+
+    <!-- Eihwaz -->
+    <path d="M 325 50 L 325 70"/>
+    <path d="M 325 52 L 331 48"/>
+    <path d="M 325 68 L 319 72"/>
+
+    <!-- Perthro -->
+    <path d="M 350 50 L 358 50 L 358 70 L 350 70"/>
+
+    <!-- Algiz -->
+    <path d="M 380 50 L 380 70"/>
+    <path d="M 380 55 L 373 50"/>
+    <path d="M 380 55 L 387 50"/>
+
+    <!-- Sowilo (S rune) -->
+    <path d="M 410 50 L 402 55 L 410 60 L 402 65 L 410 70"/>
+
+    <!-- Tiwaz -->
+    <path d="M 435 50 L 435 70"/>
+    <path d="M 428 54 L 435 50 L 442 54"/>
+
+    <!-- Berkano -->
+    <path d="M 460 50 L 460 70"/>
+    <path d="M 460 50 L 468 55 L 460 60"/>
+    <path d="M 460 60 L 468 65 L 460 70"/>
+
+    <!-- Ehwaz -->
+    <path d="M 485 50 L 485 70"/>
+    <path d="M 493 50 L 493 70"/>
+    <path d="M 485 55 L 493 60"/>
+
+    <!-- Mannaz -->
+    <path d="M 510 50 L 510 70"/>
+    <path d="M 518 50 L 518 70"/>
+    <path d="M 510 50 L 518 58"/>
+    <path d="M 518 50 L 510 58"/>
+
+    <!-- Laguz -->
+    <path d="M 540 50 L 540 70"/>
+    <path d="M 540 50 L 546 54"/>
+
+    <!-- Ingwaz (diamond) -->
+    <path d="M 570 55 L 578 60 L 570 65 L 562 60 Z"/>
+
+    <!-- Dagaz -->
+    <path d="M 595 50 L 595 70"/>
+    <path d="M 605 50 L 605 70"/>
+    <path d="M 595 50 L 605 70"/>
+    <path d="M 605 50 L 595 70"/>
+
+    <!-- Othala -->
+    <path d="M 630 55 L 638 60 L 630 65 L 622 60 Z"/>
+    <path d="M 625 65 L 620 72"/>
+    <path d="M 635 65 L 640 72"/>
+
+    <!-- Repeat pattern (subtle inscription flow) -->
+    <path d="M 665 50 L 665 70"/>
+    <path d="M 665 52 L 673 48"/>
+    <path d="M 665 58 L 671 54"/>
+
+    <path d="M 690 50 L 690 70 L 698 55 L 698 70"/>
+
+    <path d="M 715 50 L 715 70"/>
+    <path d="M 715 56 L 723 60 L 715 64"/>
+
+    <path d="M 740 50 L 740 70"/>
+    <path d="M 740 54 L 748 52"/>
+    <path d="M 740 60 L 748 58"/>
+
+    <path d="M 765 50 L 765 70"/>
+    <path d="M 765 50 L 773 58 L 765 62"/>
+  </g>
+
+  <!-- Deep shadow at bottom for weight -->
+  <rect x="0" y="115" width="800" height="5" fill="#1A2530" opacity="0.5"/>
+
+  <!-- Highlight at top for chiseled edge -->
+  <rect x="0" y="0" width="800" height="2" fill="#8A9AA8" opacity="0.3"/>
+</svg>
