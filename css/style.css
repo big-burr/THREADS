@@ -394,6 +394,37 @@ body {
   letter-spacing: 0.5px;
 }
 
+.garment-nickname {
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 11px;
+  color: var(--denim);
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outfit-nickname {
+  font-style: italic;
+  color: var(--rust);
+  margin-left: 4px;
+}
+
+.outfit-item-clickable {
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 0.15s ease;
+}
+
+.outfit-item-clickable:hover {
+  border-bottom-color: var(--denim);
+}
+
+.outfit-photo-item {
+  cursor: pointer;
+}
+
 .week-planner {
   margin-bottom: 32px;
 }
@@ -648,14 +679,17 @@ textarea.picker-input {
 
 [data-theme="woods"] body {
   background:
-    var(--canvas)
-    repeating-linear-gradient(
-      92deg,
-      rgba(90,60,30,0.03) 0px,
-      rgba(90,60,30,0.03) 1px,
-      transparent 1px,
-      transparent 6px
-    );
+    url('../assets/woods-bg.svg') var(--canvas);
+  background-size: 400px 400px;
+  background-repeat: repeat;
+}
+
+/* Content panels get their own opaque background so text is legible over the pattern */
+[data-theme="woods"] #app {
+  background: rgba(232, 225, 208, 0.85);
+  backdrop-filter: blur(1px);
+  border-left: 1px solid rgba(60, 45, 25, 0.15);
+  border-right: 1px solid rgba(60, 45, 25, 0.15);
 }
 
 [data-theme="woods"] .site-header {
@@ -782,8 +816,18 @@ textarea.picker-input {
 
 [data-theme="iceland"] body {
   background:
-    var(--canvas)
-    linear-gradient(180deg, #DFE4E7 0%, var(--canvas) 40%);
+    url('../assets/iceland-bg.svg') var(--canvas);
+  background-size: 240px 240px;
+  background-repeat: repeat;
+}
+
+[data-theme="iceland"] #app {
+  background: rgba(232, 236, 238, 0.88);
+  border-left: 2px solid var(--thread);
+  border-right: 2px solid var(--thread);
+  box-shadow:
+    inset 3px 0 0 rgba(31, 58, 85, 0.15),
+    inset -3px 0 0 rgba(31, 58, 85, 0.15);
 }
 
 /* Header: heavy carved feel */
