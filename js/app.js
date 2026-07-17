@@ -12,6 +12,7 @@ const Settings = (() => {
     imageQuality: 'medium',      // 'low' | 'medium' | 'high'
     autoTag: 'yes',              // 'yes' | 'no' — whether to call the AI to tag new items
     pinnedCategories: '',        // comma-separated list of category names to show first, in that order
+    theme: 'clean',              // 'clean' | 'woods' | 'iceland'
   };
 
   function load() {
@@ -103,6 +104,7 @@ const els = {
   settingsBtn: document.getElementById('settingsBtn'),
   settingsModal: document.getElementById('settingsModal'),
   settingsForm: document.getElementById('settingsForm'),
+  settingTheme: document.getElementById('settingTheme'),
   settingResultDisplay: document.getElementById('settingResultDisplay'),
   settingShowWornBadges: document.getElementById('settingShowWornBadges'),
   settingHistoryDays: document.getElementById('settingHistoryDays'),
@@ -1120,6 +1122,7 @@ els.dayPlanForm.addEventListener('submit', async (e) => {
 
 els.settingsBtn.addEventListener('click', () => {
   const current = Settings.load();
+  els.settingTheme.value = current.theme || 'clean';
   els.settingResultDisplay.value = current.resultDisplay;
   els.settingShowWornBadges.value = current.showWornBadges;
   els.settingHistoryDays.value = String(current.historyDays);
@@ -1137,6 +1140,7 @@ els.cancelSettings.addEventListener('click', () => {
 els.settingsForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const newSettings = {
+    theme: els.settingTheme.value,
     resultDisplay: els.settingResultDisplay.value,
     showWornBadges: els.settingShowWornBadges.value,
     historyDays: parseInt(els.settingHistoryDays.value, 10),
@@ -1146,6 +1150,7 @@ els.settingsForm.addEventListener('submit', async (e) => {
     pinnedCategories: els.settingPinnedCategories.value.trim(),
   };
   Settings.save(newSettings);
+  applyTheme(newSettings.theme);
   els.settingsModal.close();
 
   // Re-render closet so setting changes take effect immediately
@@ -1153,6 +1158,25 @@ els.settingsForm.addEventListener('submit', async (e) => {
     await renderCloset();
   }
 });
+
+// Sets the data-theme attribute on <html> so CSS selectors can style accordingly,
+// and swaps the wordmark subtitle to match the theme's vibe.
+function applyTheme(themeName) {
+  const validThemes = ['clean', 'woods', 'iceland'];
+  const theme = validThemes.includes(themeName) ? themeName : 'clean';
+  document.documentElement.setAttribute('data-theme', theme);
+
+  const subtitles = {
+    clean: 'garment index · outfit picks',
+    woods: 'field guide · what to wear',
+    iceland: 'runic wardrobe · saga of raiment',
+  };
+  const subEl = document.getElementById('wordmarkSub');
+  if (subEl) subEl.textContent = subtitles[theme];
+}
+
+// Apply saved theme on initial load
+applyTheme(Settings.get('theme') || 'clean');
 
 // ---------- Photo lightbox ----------
 
