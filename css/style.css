@@ -856,8 +856,8 @@ textarea.picker-input {
 
 [data-theme="iceland"] body {
   background:
-    url('../assets/iceland-closet.svg') var(--canvas);
-  background-size: 360px 360px;
+    url('../assets/iceland-bg.svg') var(--canvas);
+  background-size: 240px 240px;
   background-repeat: repeat;
   background-attachment: fixed;
 }
@@ -868,15 +868,17 @@ textarea.picker-input {
   padding-right: 28px;
 }
 
-/* Header: carved stone slab with runic inscription band */
+/* Header: full warrior tapestry — aurora, Yggdrasil, mountains, longships, weapons */
 [data-theme="iceland"] .site-header {
-  background: url('../assets/iceland-header.svg');
-  background-size: 100% 100%;
+  background: url('../assets/iceland-closet.svg');
+  background-size: cover;
+  background-position: center;
   background-repeat: no-repeat;
   border-bottom: 4px double #0A1520;
   color: #F0F4F8;
-  padding: 28px 32px;
+  padding: 40px 32px 44px;
   box-shadow: 0 3px 0 rgba(10, 21, 32, 0.5);
+  min-height: 180px;
 }
 
 [data-theme="iceland"] .wordmark-main {
