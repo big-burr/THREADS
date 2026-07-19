@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <defs>
+    <radialGradient id="rivetGrad" cx="0.4" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#8A8A92"/>
+      <stop offset="0.5" stop-color="#4A4A50"/>
+      <stop offset="1" stop-color="#1F1F25"/>
+    </radialGradient>
+  </defs>
+  <!-- Outer dark shadow (recessed into wood look) -->
+  <circle cx="8" cy="8.5" r="6" fill="#1F0F04" opacity="0.5"/>
+  <!-- Iron rivet head -->
+  <circle cx="8" cy="8" r="5.5" fill="url(#rivetGrad)" stroke="#1A1A20" stroke-width="0.8"/>
+  <!-- Highlight catching light -->
+  <circle cx="6.5" cy="6.5" r="1.5" fill="#B8B8C0" opacity="0.75"/>
+  <circle cx="6" cy="6" r="0.6" fill="#F0F0F0" opacity="0.7"/>
+  <!-- Small hammer mark on the head (hand-forged detail) -->
+  <ellipse cx="9.5" cy="9.5" rx="1.2" ry="0.5" fill="#1A1A20" opacity="0.4" transform="rotate(30 9.5 9.5)"/>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="16" viewBox="0 0 60 16">
+  <!-- One period of the same knotwork ribbon from the floor pattern, but standalone -->
+  <!-- Bottom ribbon (sine wave dipping down) -->
+  <path d="M 0 8 Q 7.5 14, 15 8 T 30 8 T 45 8 T 60 8"
+        stroke="#1A0A02" stroke-width="3" fill="none" opacity="0.9" stroke-linecap="round"/>
+  <path d="M 0 8 Q 7.5 14, 15 8 T 30 8 T 45 8 T 60 8"
+        stroke="#3E2010" stroke-width="1.5" fill="none" opacity="0.85" stroke-linecap="round"/>
+  <!-- Top ribbon (cosine wave rising up) -->
+  <path d="M 0 8 Q 7.5 2, 15 8 T 30 8 T 45 8 T 60 8"
+        stroke="#1A0A02" stroke-width="3" fill="none" opacity="0.9" stroke-linecap="round"/>
+  <path d="M 0 8 Q 7.5 2, 15 8 T 30 8 T 45 8 T 60 8"
+        stroke="#4A2814" stroke-width="1.5" fill="none" opacity="0.85" stroke-linecap="round"/>
+  <!-- Copper accents on the "over" strand -->
+  <path d="M 0 8 Q 7.5 2, 15 8" stroke="#B8863C" stroke-width="0.7" fill="none" opacity="0.7" stroke-linecap="round"/>
+  <path d="M 30 8 Q 37.5 2, 45 8" stroke="#B8863C" stroke-width="0.7" fill="none" opacity="0.7" stroke-linecap="round"/>
+  <!-- Copper crossing dots -->
+  <circle cx="15" cy="8" r="1.4" fill="#B8863C" opacity="0.7" stroke="#1A0A02" stroke-width="0.3"/>
+  <circle cx="30" cy="8" r="1.4" fill="#B8863C" opacity="0.7" stroke="#1A0A02" stroke-width="0.3"/>
+  <circle cx="45" cy="8" r="1.4" fill="#B8863C" opacity="0.7" stroke="#1A0A02" stroke-width="0.3"/>
+</svg>
