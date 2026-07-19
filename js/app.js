@@ -1196,7 +1196,7 @@ els.settingsForm.addEventListener('submit', async (e) => {
 // Sets the data-theme attribute on <html> so CSS selectors can style accordingly,
 // and swaps the wordmark subtitle to match the theme's vibe.
 function applyTheme(themeName) {
-  const validThemes = ['clean', 'woods', 'iceland'];
+  const validThemes = ['clean', 'woods', 'iceland', 'vinland'];
   const theme = validThemes.includes(themeName) ? themeName : 'clean';
   document.documentElement.setAttribute('data-theme', theme);
 
@@ -1204,6 +1204,7 @@ function applyTheme(themeName) {
     clean: 'garment index · outfit picks',
     woods: 'field guide · what to wear',
     iceland: 'runic wardrobe · saga of raiment',
+    vinland: 'longhouse wardrobe · well-worn wares',
   };
   const subEl = document.getElementById('wordmarkSub');
   if (subEl) subEl.textContent = subtitles[theme];
