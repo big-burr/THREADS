@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Roboto+Slab:wght@400;500;700&family=Frank+Ruhl+Libre:wght@400;500;700&family=Cinzel:wght@500;700;900&family=IM+Fell+English:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Roboto+Slab:wght@400;500;700&family=Frank+Ruhl+Libre:wght@400;500;700&family=Cinzel:wght@500;700;900&family=IM+Fell+English:ital@0;1&family=Cormorant+Garamond:wght@500;600;700&display=swap');
 
 :root {
   --canvas: #EDE7DD;
@@ -1503,4 +1503,479 @@ textarea.picker-input {
 [data-theme="iceland"] .insight-card,
 [data-theme="iceland"] .garment-card {
   /* Same */
+}
+
+/* ============================================================
+   THEME: VINLAND
+   Warm firelit longhouse — carved oak, forged iron, copper accents.
+   Warmer than Woods (wild forest) and Iceland (cosmic/mythological).
+   ============================================================ */
+
+[data-theme="vinland"] {
+  --canvas: #6B4428;           /* warm oak base — the plank floor */
+  --canvas-raised: #F1E4D0;    /* cream parchment for text plates */
+  --thread: #2A1808;           /* deep loam brown for text */
+  --thread-soft: #5A3820;      /* softer brown for secondary text */
+  --denim: #8A4820;            /* forge copper as primary accent */
+  --denim-dark: #5A2C10;       /* darker copper for accent buttons */
+  --rust: #B8863C;             /* bright hearth copper for highlights */
+  --rust-soft: #D0A050;        /* pale hearth glow */
+  --line: #3E2010;             /* iron-dark border lines */
+
+  --font-display: 'Cormorant Garamond', 'Frank Ruhl Libre', serif;
+  --font-body: 'IM Fell English', 'Frank Ruhl Libre', serif;
+  --font-mono: 'Cormorant Garamond', 'Roboto Slab', serif;
+
+  --radius: 3px;
+}
+
+[data-theme="vinland"] html,
+[data-theme="vinland"] body {
+  min-height: 100%;
+}
+
+/* Whole-page background: the timber plank floor with knotwork seams */
+[data-theme="vinland"] body {
+  background:
+    url('../assets/vinland-closet.svg') var(--canvas);
+  background-size: 400px 400px;
+  background-repeat: repeat;
+  background-attachment: fixed;
+}
+
+[data-theme="vinland"] #app {
+  background: transparent;
+  padding-left: 28px;
+  padding-right: 28px;
+}
+
+/* Header: the carved oak lintel with knotwork medallion + hanging shields */
+[data-theme="vinland"] .site-header {
+  background: url('../assets/vinland-header.svg');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border-bottom: 4px double #1F0F04;
+  color: #F1E4D0;
+  padding: 32px 32px 36px;
+  box-shadow: 0 3px 0 rgba(31, 15, 4, 0.5);
+  min-height: 140px;
+}
+
+[data-theme="vinland"] .wordmark-main {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  letter-spacing: 6px;
+  font-size: 30px;
+  color: #F1E4D0;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55);
+}
+
+[data-theme="vinland"] .wordmark-sub {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  letter-spacing: 1.5px;
+  font-size: 12px;
+  text-transform: none;
+  color: #D0A050;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Header buttons: brass-tag look on wooden beam */
+[data-theme="vinland"] .site-header .btn-tag {
+  background: linear-gradient(180deg, #F1E4D0 0%, #D8C4A0 100%);
+  color: var(--thread);
+  border: 2px solid #1F0F04;
+  border-radius: 3px;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  font-size: 11px;
+  padding: 8px 14px 8px 22px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="vinland"] .site-header .btn-tag::before {
+  background: var(--rust);
+  border-color: var(--thread);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  left: 10px;
+}
+
+[data-theme="vinland"] .site-header .btn-tag--accent {
+  background: linear-gradient(180deg, var(--denim) 0%, var(--denim-dark) 100%);
+  color: #F1E4D0;
+}
+
+[data-theme="vinland"] .site-header .btn-tag--accent::before {
+  background: var(--rust-soft);
+}
+
+/* ---------- TEXT PLATES (cream parchment over dark floor) ---------- */
+
+/* Rail titles get a parchment plate + rosette + knot underline */
+[data-theme="vinland"] .rail-title {
+  background: rgba(241, 228, 208, 0.97);
+  padding: 8px 44px 12px 44px;
+  border: 2px solid var(--thread);
+  border-radius: 3px;
+  box-shadow:
+    0 2px 0 rgba(31, 15, 4, 0.5),
+    inset 0 0 0 1px rgba(184, 134, 60, 0.4);
+  margin-bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  color: var(--thread);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-size: 16px;
+  position: relative;
+}
+
+/* Chip-carved rosette flanking rail titles */
+[data-theme="vinland"] .rail-title::before {
+  content: "";
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-image: url('../assets/vinland-rosette.svg');
+  background-repeat: no-repeat;
+  background-size: contain;
+  vertical-align: middle;
+}
+
+[data-theme="vinland"] .rail-title::after {
+  content: "";
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-image: url('../assets/vinland-rosette.svg');
+  background-repeat: no-repeat;
+  background-size: contain;
+  vertical-align: middle;
+}
+
+[data-theme="vinland"] .rail-count {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  color: var(--thread-soft);
+  font-size: 13px;
+}
+
+[data-theme="vinland"] .rail-track {
+  background: transparent;
+  border-bottom: none;
+}
+
+/* Status lines on parchment plates */
+[data-theme="vinland"] .status-line {
+  background: rgba(241, 228, 208, 0.94);
+  padding: 6px 12px;
+  border-radius: 3px;
+  display: inline-block;
+  border: 1.5px solid var(--thread);
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  color: var(--thread);
+}
+
+/* Search input plate */
+[data-theme="vinland"] .closet-search input {
+  background: rgba(241, 228, 208, 0.97);
+  border: 2px solid var(--thread);
+  color: var(--thread);
+  font-family: 'IM Fell English', serif;
+  box-shadow:
+    0 2px 0 rgba(31, 15, 4, 0.4),
+    inset 0 0 0 1px rgba(184, 134, 60, 0.35);
+}
+
+/* ---------- BOX FLAIR: cards with rivets at corners ---------- */
+
+/* Garment cards: warm parchment with iron rivets at each corner */
+[data-theme="vinland"] .garment-card {
+  background: linear-gradient(180deg, #F1E4D0 0%, #E4D2B4 100%);
+  border: 2px solid var(--thread);
+  border-radius: 3px;
+  box-shadow:
+    0 3px 0 rgba(31, 15, 4, 0.5),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Iron rivets at all four corners of garment cards */
+[data-theme="vinland"] .garment-card::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  pointer-events: none;
+  background-image:
+    url('../assets/vinland-rivet.svg'),
+    url('../assets/vinland-rivet.svg'),
+    url('../assets/vinland-rivet.svg'),
+    url('../assets/vinland-rivet.svg');
+  background-repeat: no-repeat;
+  background-position:
+    left top,
+    right top,
+    left bottom,
+    right bottom;
+  background-size: 12px 12px, 12px 12px, 12px 12px, 12px 12px;
+}
+
+/* Card content colors */
+[data-theme="vinland"] .garment-color {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  color: var(--denim-dark);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+[data-theme="vinland"] .garment-style {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  color: var(--thread-soft);
+  font-size: 12px;
+}
+
+[data-theme="vinland"] .garment-nickname {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  color: var(--denim);
+}
+
+/* Worn badge in Vinland style */
+[data-theme="vinland"] .garment-worn-badge {
+  background: var(--denim-dark);
+  color: var(--canvas-raised);
+  border: 1px solid var(--rust);
+  border-radius: 2px;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* Insight cards: parchment with chip-carved rosette top and bottom */
+[data-theme="vinland"] .insight-card {
+  background: linear-gradient(180deg, #F1E4D0 0%, #E4D2B4 100%);
+  border: 2px solid var(--thread);
+  border-radius: 3px;
+  box-shadow:
+    0 3px 0 rgba(31, 15, 4, 0.45),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.4);
+  padding-top: 22px;
+  padding-bottom: 22px;
+  position: relative;
+}
+
+[data-theme="vinland"] .insight-card::before,
+[data-theme="vinland"] .insight-card::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 16px;
+  background-image: url('../assets/vinland-rosette.svg');
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.85;
+}
+
+[data-theme="vinland"] .insight-card::before { top: 4px; }
+[data-theme="vinland"] .insight-card::after { bottom: 4px; }
+
+[data-theme="vinland"] .insight-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  color: var(--denim-dark);
+  letter-spacing: 1.5px;
+}
+
+[data-theme="vinland"] .insight-label {
+  font-family: 'Cormorant Garamond', serif;
+  color: var(--denim);
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+[data-theme="vinland"] .insight-sub {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  color: var(--thread-soft);
+}
+
+/* Week planner day cards: same parchment-plus-rivets treatment */
+[data-theme="vinland"] .week-day-card {
+  background: linear-gradient(180deg, #F1E4D0 0%, #E4D2B4 100%);
+  border: 2px solid var(--thread);
+  border-radius: 3px;
+  box-shadow:
+    0 3px 0 rgba(31, 15, 4, 0.45),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.4);
+  position: relative;
+}
+
+/* Rivets on week card corners */
+[data-theme="vinland"] .week-day-card::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  pointer-events: none;
+  background-image:
+    url('../assets/vinland-rivet.svg'),
+    url('../assets/vinland-rivet.svg'),
+    url('../assets/vinland-rivet.svg'),
+    url('../assets/vinland-rivet.svg');
+  background-repeat: no-repeat;
+  background-position: left top, right top, left bottom, right bottom;
+  background-size: 10px 10px, 10px 10px, 10px 10px, 10px 10px;
+}
+
+[data-theme="vinland"] .week-day-card.has-plan {
+  background: linear-gradient(180deg, #E4D2B4 0%, #C8A878 100%);
+  border-color: var(--denim-dark);
+}
+
+[data-theme="vinland"] .week-day-label {
+  font-family: 'Cormorant Garamond', serif;
+  color: var(--denim);
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+
+[data-theme="vinland"] .week-day-date {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  color: var(--thread);
+  font-size: 20px;
+}
+
+[data-theme="vinland"] .week-day-summary {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  color: var(--thread-soft);
+}
+
+/* Outfit picker & result panels */
+[data-theme="vinland"] .outfit-picker,
+[data-theme="vinland"] .outfit-result {
+  background: linear-gradient(180deg, #F1E4D0 0%, #E4D2B4 100%);
+  border: 2px solid var(--thread);
+  border-radius: 3px;
+  box-shadow:
+    0 3px 0 rgba(31, 15, 4, 0.45),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.4);
+  position: relative;
+}
+
+[data-theme="vinland"] .picker-label,
+[data-theme="vinland"] .modal-label {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  color: var(--thread);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 11px;
+}
+
+[data-theme="vinland"] .picker-input {
+  background: rgba(255, 251, 240, 0.98);
+  border: 2px solid var(--thread);
+  border-radius: 2px;
+  color: var(--thread);
+  font-family: 'IM Fell English', serif;
+}
+
+/* Modals: same warm parchment style */
+[data-theme="vinland"] .tag-modal {
+  background: #F1E4D0;
+  border: 3px solid var(--thread);
+  border-radius: 3px;
+  box-shadow: 0 6px 0 rgba(31, 15, 4, 0.5);
+}
+
+[data-theme="vinland"] .tag-modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  color: var(--thread);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  border-bottom: 3px double var(--thread);
+  padding-bottom: 8px;
+}
+
+/* Style checkboxes: parchment tags with copper accent when checked */
+[data-theme="vinland"] .style-checkbox {
+  font-family: 'Cormorant Garamond', serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 11px;
+  padding: 6px 12px;
+  background: #F1E4D0;
+  border: 1.5px solid var(--thread);
+  border-radius: 2px;
+  color: var(--thread);
+}
+
+[data-theme="vinland"] .style-checkbox:has(input:checked) {
+  background: var(--denim);
+  color: var(--canvas-raised);
+  border-color: var(--rust);
+}
+
+/* Detail stats row: parchment plaque with rosette accents */
+[data-theme="vinland"] .detail-stats-row {
+  background: linear-gradient(180deg, #F1E4D0 0%, #E4D2B4 100%);
+  border: 2px solid var(--thread);
+  border-radius: 3px;
+  padding: 12px;
+  box-shadow:
+    0 2px 0 rgba(31, 15, 4, 0.4),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="vinland"] .detail-stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  color: var(--denim-dark);
+  letter-spacing: 1.5px;
+}
+
+[data-theme="vinland"] .detail-stat-label {
+  font-family: 'Cormorant Garamond', serif;
+  color: var(--denim);
+  letter-spacing: 2px;
+}
+
+/* ---------- SECTION DIVIDERS: knotwork bands between rails ---------- */
+
+[data-theme="vinland"] .category-rail + .category-rail::before {
+  content: "";
+  display: block;
+  height: 20px;
+  margin: -4px 0 20px;
+  background-image: url('../assets/vinland-knot.svg');
+  background-repeat: repeat-x;
+  background-position: center;
+  background-size: auto 16px;
+  background-color: rgba(241, 228, 208, 0.6);
+  border-radius: 3px;
+  padding: 2px;
+}
+
+/* ---------- CLOSET RAILS: transparent (page bg carries) ---------- */
+
+[data-theme="vinland"] #closetRails {
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  margin-top: 12px;
 }
