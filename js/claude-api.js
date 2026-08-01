@@ -24,7 +24,20 @@ const ClaudeAPI = (() => {
     return localStorage.getItem('threads_api_key') || '';
   }
 
+  function isAdminMode() {
+    try {
+      // AdminMode is defined in app.js and loaded before claude-api.js
+      return typeof AdminMode !== 'undefined' && AdminMode.isOn();
+    } catch (err) {
+      return false;
+    }
+  }
+
   function ensureApiKey() {
+    // Never prompt for an API key when running in friend mode. This is a
+    // safety belt in case any AI-gated code path is reached (a stale button,
+    // a leftover event handler) — friends never trigger the key prompt.
+    if (!isAdminMode()) return '';
     let key = getApiKey();
     if (!key) {
       key = prompt('Enter your Anthropic API key (stored locally in this browser only):');
