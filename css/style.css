@@ -1979,3 +1979,13 @@ textarea.picker-input {
   box-shadow: none;
   margin-top: 12px;
 }
+
+/* ============================================================
+   ADMIN MODE GATING
+   Elements marked [data-admin-only] are hidden unless the app
+   is running in admin mode. Admin mode is toggled by visiting
+   with ?admin=1 and is persisted in localStorage.
+   ============================================================ */
+html:not([data-admin]) [data-admin-only] {
+  display: none !important;
+}
