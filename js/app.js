@@ -1,5 +1,53 @@
 /* app.js — THREADS main controller */
 
+// ---------- Admin mode ----------
+// THREADS runs in two modes:
+//   - Friend mode (default): pure closet organizer, no API calls, no key needed
+//   - Admin mode: unlocks AI features (auto-tagging, outfit suggestions, week planning)
+// Admin mode is toggled by visiting the page with ?admin=1 (or ?admin=0 to turn off),
+// and persists in localStorage so ?admin=1 only needs to be visited once.
+
+const AdminMode = (() => {
+  const KEY = 'threads_admin_mode';
+
+  function initFromUrl() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('admin')) {
+        const v = params.get('admin');
+        if (v === '1' || v === 'true' || v === 'on') {
+          localStorage.setItem(KEY, 'yes');
+        } else {
+          localStorage.removeItem(KEY);
+        }
+      }
+    } catch (err) { /* ignore */ }
+  }
+
+  function isOn() {
+    try {
+      return localStorage.getItem(KEY) === 'yes';
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function apply() {
+    // Sets a data-admin attribute on <html> so CSS can hide admin-only UI
+    // when the mode is off. See style.css for [data-admin-only] hiding rules.
+    if (isOn()) {
+      document.documentElement.setAttribute('data-admin', 'yes');
+    } else {
+      document.documentElement.removeAttribute('data-admin');
+    }
+  }
+
+  initFromUrl();
+  apply();
+
+  return { isOn, apply };
+})();
+
 // ---------- Settings ----------
 
 const Settings = (() => {
@@ -32,7 +80,14 @@ const Settings = (() => {
   }
 
   function get(key) {
-    return load()[key];
+    const value = load()[key];
+    // In friend mode, force AI-gated settings to safe defaults regardless of
+    // what's stored — a friend who lands on the page should never trigger
+    // API calls even if a prior session set autoTag: yes.
+    if (typeof AdminMode !== 'undefined' && !AdminMode.isOn()) {
+      if (key === 'autoTag') return 'no';
+    }
+    return value;
   }
 
   // Maps imageQuality setting to (maxDimension, quality) numbers used by
@@ -139,14 +194,21 @@ const els = {
 
 // ---------- Vault connection ----------
 
+// Status-line text differs between admin (BAKER-aware) and friend (plain) mode
+function connectedStatusHtml(folderId) {
+  const folderUrl = `https://drive.google.com/drive/folders/${folderId}`;
+  if (AdminMode.isOn()) {
+    return `vault connected — <a href="${folderUrl}" target="_blank" style="color:inherit">open 08-Closet in Drive</a>`;
+  }
+  return `closet connected — <a href="${folderUrl}" target="_blank" style="color:inherit">open in Google Drive</a>`;
+}
+
 els.connectVaultBtn.addEventListener('click', async () => {
   els.vaultStatus.querySelector('.status-line').textContent = 'connecting…';
   const ok = await Vault.connect();
   if (ok) {
-    const folderId = Vault.getConnectedFolderId();
-    const folderUrl = `https://drive.google.com/drive/folders/${folderId}`;
     els.vaultStatus.querySelector('.status-line').innerHTML =
-      `vault connected — <a href="${folderUrl}" target="_blank" style="color:inherit">open 08-Closet in Drive</a>`;
+      connectedStatusHtml(Vault.getConnectedFolderId());
     els.reselectVaultBtn.classList.remove('hidden');
     await renderCloset();
     await renderWeekPlanner();
@@ -157,17 +219,16 @@ els.connectVaultBtn.addEventListener('click', async () => {
 });
 
 els.reselectVaultBtn.addEventListener('click', async () => {
-  const confirmed = confirm(
-    'This lets you pick a different folder to use as your closet. Pick the folder that already contains "08-Closet", or your BAKER vault root — not the 08-Closet folder itself.'
-  );
+  const message = AdminMode.isOn()
+    ? 'This lets you pick a different folder to use as your closet. Pick the folder that already contains "08-Closet", or your BAKER vault root — not the 08-Closet folder itself.'
+    : 'This lets you pick a different folder in your Google Drive to store your closet in. Pick any folder — THREADS will create a subfolder inside it for your items. If you want to start fresh, pick an empty folder or create a new one in Drive first.';
+  const confirmed = confirm(message);
   if (!confirmed) return;
   els.vaultStatus.querySelector('.status-line').textContent = 'reselecting…';
   const ok = await Vault.reselectVaultFolder();
   if (ok) {
-    const folderId = Vault.getConnectedFolderId();
-    const folderUrl = `https://drive.google.com/drive/folders/${folderId}`;
     els.vaultStatus.querySelector('.status-line').innerHTML =
-      `vault connected — <a href="${folderUrl}" target="_blank" style="color:inherit">open 08-Closet in Drive</a>`;
+      connectedStatusHtml(Vault.getConnectedFolderId());
     await renderCloset();
     await renderWeekPlanner();
   } else {
@@ -1200,11 +1261,16 @@ function applyTheme(themeName) {
   const theme = validThemes.includes(themeName) ? themeName : 'clean';
   document.documentElement.setAttribute('data-theme', theme);
 
-  const subtitles = {
+  const subtitles = AdminMode.isOn() ? {
     clean: 'garment index · outfit picks',
     woods: 'field guide · what to wear',
     iceland: 'runic wardrobe · saga of raiment',
     vinland: 'longhouse wardrobe · well-worn wares',
+  } : {
+    clean: 'closet organizer',
+    woods: 'field guide',
+    iceland: 'runic wardrobe',
+    vinland: 'longhouse wardrobe',
   };
   const subEl = document.getElementById('wordmarkSub');
   if (subEl) subEl.textContent = subtitles[theme];
